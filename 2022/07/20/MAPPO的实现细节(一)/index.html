@@ -1,0 +1,787 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/batman.png">
+  <link rel="icon" href="/img/batman.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#474b4c">
+  <meta name="author" content="Coldison">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="之前研读过light-mappo的代码，对于其中强化学习的部分已经有所了解，想要自己跑一下但是环境的部分被抽走了，所以还是看看原版的代码并做点笔记。 先介绍一下MAPPO，原文The Surprising Effectiveness of PPO in Cooperative, Multi-Agent Games，主要解决的问题是，将PPO算法应用在Multi-Agent环境中需要使用的一些技巧，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MAPPO的实现细节(一)">
+<meta property="og:url" content="https://coldison.github.io/2022/07/20/MAPPO%E7%9A%84%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82(%E4%B8%80)/index.html">
+<meta property="og:site_name" content="凉快Coldison">
+<meta property="og:description" content="之前研读过light-mappo的代码，对于其中强化学习的部分已经有所了解，想要自己跑一下但是环境的部分被抽走了，所以还是看看原版的代码并做点笔记。 先介绍一下MAPPO，原文The Surprising Effectiveness of PPO in Cooperative, Multi-Agent Games，主要解决的问题是，将PPO算法应用在Multi-Agent环境中需要使用的一些技巧，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtodlFxYlZwaWJSNHg3U0htaVE_ZT1ISFNYQTY.png">
+<meta property="article:published_time" content="2022-07-20T02:20:19.000Z">
+<meta property="article:modified_time" content="2022-09-01T07:19:05.009Z">
+<meta property="article:author" content="Coldison">
+<meta property="article:tag" content="MAPPO">
+<meta property="article:tag" content="MARL">
+<meta property="article:tag" content="RL">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtodlFxYlZwaWJSNHg3U0htaVE_ZT1ISFNYQTY.png">
+<meta name="twitter:creator" content="@Coldison">
+<meta name="twitter:site" content="coldison.github.io">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>MAPPO的实现细节(一) - 凉快Coldison</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"coldison.github.io","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#7e2065","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading2.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Coldison</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/grey.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="MAPPO的实现细节(一)"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-07-20 10:20" pubdate>
+          2022年7月20日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          42 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">MAPPO的实现细节(一)</h1>
+            
+              <p class="note note-info">
+                
+                  
+                    本文最后更新于：5 个月前
+                  
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <p>之前研读过light-mappo的代码，对于其中强化学习的部分已经有所了解，想要自己跑一下但是环境的部分被抽走了，所以还是看看原版的代码并做点笔记。</p>
+<p>先介绍一下MAPPO，原文<a target="_blank" rel="noopener" href="https://arxiv.org/abs/2103.01955">The Surprising Effectiveness of PPO in Cooperative, Multi-Agent Games</a>，主要解决的问题是，将PPO算法应用在Multi-Agent环境中需要使用的一些技巧，从IPPO扩展到MAPPO。项目地址：<a target="_blank" rel="noopener" href="https://github.com/marlbenchmark/on-policy">MAPPO</a>。</p>
+<h3 id="MAPPO的环境配置"><a href="#MAPPO的环境配置" class="headerlink" title="MAPPO的环境配置"></a>MAPPO的环境配置</h3><p>这个项目的第一个难点就是环境配置。项目提供了requirements.txt，使用 <code>pip install -r requirements.txt</code>安装对应的环境。也提供了environment.yaml,  使用 <code>conda env create -f environment.yaml</code> 命令安装对于的环境。但是由于本项目使用的python 3.6不再维护，很多包的版本也已经过期，所以使用上述命令并不能使得项目能够运行。使用 <code>conda create -n py37 python=3.7</code>命令创建环境。然后建议使用 <code>pip install -r requirements.txt</code>。使用 <code>pip freeze &gt; requirements.txt</code>命令生成。我使用的是<a target="_blank" rel="noopener" href="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3QvcyFBa3A3T0FGTWxmRUtodkpTY3BsYjJfMVFkZzZkYnc_ZT1FZDduckM.txt">requirements.txt</a>, 由于使用的CUDA环境不一样，pytorch请自行安装</p>
+<p>项目使用了wandb作为训练logger，关于wandb的使用参见，<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/493093033">wandb使用教程(一)：基础用法</a>。</p>
+<p>在scripts文件夹中给出了很多运行的脚本，但是sh脚本对我来说始终有编码的问题，而python本身就是脚本语言，所以我直接在py文件中添加参数，当然也可以使用命令行运行，我觉得要比sh脚本方便很多。</p>
+<p>我选择了足球作为应用的环境，本项目使用了谷歌足球的环境，参见<a target="_blank" rel="noopener" href="https://github.com/google-research/football/blob/master/README.md">gfootball</a>, 按照说明按照对应的依赖与环境。将train_football.py放到根目录，然后按照sh文件修改对应的参数，使用wandb需要将对应的用户名改成自己的用户名。</p>
+<p>至此应该是能够顺利运行本项目了。下图是我的训练结果，好像不太行。<img src="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtodlFxYlZwaWJSNHg3U0htaVE_ZT1ISFNYQTY.png" srcset="/img/loading2.gif" lazyload alt="足球环境训练结果"></p>
+<h3 id="多线程Env"><a href="#多线程Env" class="headerlink" title="多线程Env"></a>多线程Env</h3><p>能够运行之后，在train_football.py中的第一步是创建Env。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">make_train_env</span>(<span class="hljs-params">all_args</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">get_env_fn</span>(<span class="hljs-params">rank</span>):<br>        <span class="hljs-keyword">def</span> <span class="hljs-title function_">init_env</span>():<br>            <span class="hljs-keyword">if</span> all_args.env_name == <span class="hljs-string">&quot;Football&quot;</span>:<br>                env = FootballEnv(all_args)<br>            <span class="hljs-keyword">else</span>:<br>                <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Can not support the &quot;</span> +<br>                      all_args.env_name + <span class="hljs-string">&quot; environment.&quot;</span>)<br>                <span class="hljs-keyword">raise</span> NotImplementedError<br>            env.seed(all_args.seed + rank * <span class="hljs-number">1000</span>)<br>            <span class="hljs-keyword">return</span> env<br>        <span class="hljs-keyword">return</span> init_env<br>    <span class="hljs-keyword">if</span> all_args.n_rollout_threads == <span class="hljs-number">1</span>:<br>        <span class="hljs-keyword">return</span> DummyVecEnv([get_env_fn(<span class="hljs-number">0</span>)])<br>    <span class="hljs-keyword">else</span>:<br>        <span class="hljs-keyword">return</span> SubprocVecEnv([get_env_fn(i) <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<br>            all_args.n_rollout_threads)])<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">make_eval_env</span>(<span class="hljs-params">all_args</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">get_env_fn</span>(<span class="hljs-params">rank</span>):<br>        <span class="hljs-keyword">def</span> <span class="hljs-title function_">init_env</span>():<br>            <span class="hljs-keyword">if</span> all_args.env_name == <span class="hljs-string">&quot;Football&quot;</span>:<br>                env = FootballEnv(all_args)<br>            <span class="hljs-keyword">else</span>:<br>                <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Can not support the &quot;</span> +<br>                      all_args.env_name + <span class="hljs-string">&quot; environment.&quot;</span>)<br>                <span class="hljs-keyword">raise</span> NotImplementedError<br>            env.seed(all_args.seed * <span class="hljs-number">50000</span> + rank * <span class="hljs-number">10000</span>)<br>            <span class="hljs-keyword">return</span> env<br>        <span class="hljs-keyword">return</span> init_env<br>    <span class="hljs-keyword">if</span> all_args.n_eval_rollout_threads == <span class="hljs-number">1</span>:<br>        <span class="hljs-keyword">return</span> DummyVecEnv([get_env_fn(<span class="hljs-number">0</span>)])<br>    <span class="hljs-keyword">else</span>:<br>        <span class="hljs-keyword">return</span> SubprocVecEnv([get_env_fn(i) <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<br>            all_args.n_eval_rollout_threads)])<br><br><span class="hljs-comment"># env init</span><br>envs = make_train_env(all_args)<br>eval_envs = make_eval_env(all_args) <span class="hljs-keyword">if</span> all_args.use_eval <span class="hljs-keyword">else</span> <span class="hljs-literal">None</span><br>num_agents = all_args.num_agents<br></code></pre></td></tr></table></figure>
+
+<p>为了实现多线程执行，并且统一收取不同运行环境中的数据，使用SubprocVecEnv创建多线程运行环境。 这里传入SubprocvecEnv的参数env_fns是一个函数，这个函数的返回值是一个环境，这个环境的初始化函数是init_env。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">SubprocVecEnv</span>(<span class="hljs-title class_ inherited__">ShareVecEnv</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, env_fns, spaces=<span class="hljs-literal">None</span></span>):<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        envs: list of gym environments to run in subprocesses</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        self.waiting = <span class="hljs-literal">False</span><br>        self.closed = <span class="hljs-literal">False</span><br>        nenvs = <span class="hljs-built_in">len</span>(env_fns)<br>        self.remotes, self.work_remotes = <span class="hljs-built_in">zip</span>(*[Pipe() <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(nenvs)])<br>        self.ps = [Process(target=worker, args=(work_remote, remote, CloudpickleWrapper(env_fn)))<br>                   <span class="hljs-keyword">for</span> (work_remote, remote, env_fn) <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(self.work_remotes, self.remotes, env_fns)]<br>        <span class="hljs-keyword">for</span> p <span class="hljs-keyword">in</span> self.ps:<br>            p.daemon = <span class="hljs-literal">True</span>  <span class="hljs-comment"># if the main process crashes, we should not cause things to hang </span><br>            p.start()<br>        <span class="hljs-keyword">for</span> remote <span class="hljs-keyword">in</span> self.work_remotes:<br>            remote.close()<br><br>        self.remotes[<span class="hljs-number">0</span>].send((<span class="hljs-string">&#x27;get_spaces&#x27;</span>, <span class="hljs-literal">None</span>))<br>        observation_space, share_observation_space, action_space = self.remotes[<span class="hljs-number">0</span>].recv()<br>        ShareVecEnv.__init__(self, <span class="hljs-built_in">len</span>(env_fns), observation_space,<br>                             share_observation_space, action_space)<br></code></pre></td></tr></table></figure>
+
+<p>首先是创建每个进程的通信管道，<code>multiprocessing.Pipe()</code>提供了一个管道，可以用来进行进程间的通信。然后将通信进程绑定到worker当中，创建不同的进程。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">worker</span>(<span class="hljs-params">remote, parent_remote, env_fn_wrapper</span>):<br>    <span class="hljs-comment"># 指示当前进程将不会再往队列中放入对象。双工的通信管道当成单工使用</span><br>    parent_remote.close()<br>    env = env_fn_wrapper.x()<br>    <span class="hljs-keyword">while</span> <span class="hljs-literal">True</span>:<br>        cmd, data = remote.recv()<br>        <span class="hljs-keyword">if</span> cmd == <span class="hljs-string">&#x27;step&#x27;</span>:<br>            ob, reward, done, info = env.step(data)<br>            <span class="hljs-keyword">if</span> <span class="hljs-string">&#x27;bool&#x27;</span> <span class="hljs-keyword">in</span> done.__class__.__name__:<br>                <span class="hljs-keyword">if</span> done:<br>                    ob = env.reset()<br>            <span class="hljs-keyword">else</span>:<br>                <span class="hljs-keyword">if</span> np.<span class="hljs-built_in">all</span>(done):<br>                    ob = env.reset()<br><br>            remote.send((ob, reward, done, info))<br>        <span class="hljs-keyword">elif</span> cmd == <span class="hljs-string">&#x27;reset&#x27;</span>:<br>            ob = env.reset()<br>            remote.send((ob))<br>        <span class="hljs-keyword">elif</span> cmd == <span class="hljs-string">&#x27;render&#x27;</span>:<br>            <span class="hljs-keyword">if</span> data == <span class="hljs-string">&quot;rgb_array&quot;</span>:<br>                fr = env.render(mode=data)<br>                remote.send(fr)<br>            <span class="hljs-keyword">elif</span> data == <span class="hljs-string">&quot;human&quot;</span>:<br>                env.render(mode=data)<br>        <span class="hljs-keyword">elif</span> cmd == <span class="hljs-string">&#x27;reset_task&#x27;</span>:<br>            ob = env.reset_task()<br>            remote.send(ob)<br>        <span class="hljs-keyword">elif</span> cmd == <span class="hljs-string">&#x27;close&#x27;</span>:<br>            env.close()<br>            remote.close()<br>            <span class="hljs-keyword">break</span><br>        <span class="hljs-keyword">elif</span> cmd == <span class="hljs-string">&#x27;get_spaces&#x27;</span>:<br>            remote.send((env.observation_space, env.share_observation_space, env.action_space))<br>        <span class="hljs-keyword">else</span>:<br>            <span class="hljs-keyword">raise</span> NotImplementedError<br></code></pre></td></tr></table></figure>
+
+<p>然后在每个worker进程中，使用env_fn_wrapper.x()来创建环境，然后使用remote.recv()来接收命令，然后使用<code>remote.send()</code>来发送数据。在worker中的worker_remote相应地发送进程数据。其中这里足球环境返回的数据是ob, reward, done, info。</p>
+<p>通过这种方式，实现了多进程环境的创建、初始化与通信。然后使用<code>step()</code>方法收取不同进程产生的训练数据。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">SubprocVecEnv</span>(<span class="hljs-title class_ inherited__">ShareVecEnv</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">step_async</span>(<span class="hljs-params">self, actions</span>):<br>        <span class="hljs-keyword">for</span> remote, action <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(self.remotes, actions):<br>            remote.send((<span class="hljs-string">&#x27;step&#x27;</span>, action))<br>        self.waiting = <span class="hljs-literal">True</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">step_wait</span>(<span class="hljs-params">self</span>):<br>        results = [remote.recv() <span class="hljs-keyword">for</span> remote <span class="hljs-keyword">in</span> self.remotes]<br>        self.waiting = <span class="hljs-literal">False</span><br>        obs, rews, dones, infos = <span class="hljs-built_in">zip</span>(*results)<br>        <span class="hljs-keyword">return</span> np.stack(obs), np.stack(rews), np.stack(dones), infos<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">step</span>(<span class="hljs-params">self, actions</span>):<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Step the environments synchronously.</span><br><span class="hljs-string"></span><br><span class="hljs-string">        This is available for backwards compatibility.</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        self.step_async(actions)<br>        <span class="hljs-keyword">return</span> self.step_wait()<br></code></pre></td></tr></table></figure>
+
+<p>关于多线程Env的总结，从流程上，对google football这个环境进行了三层封装，一层是将football封装成FootballEnv，在这之中可以配置reward，以及render方法，第二层是把这个环境塞进worker并且配置通信进程，第三层是将多线程worker封装成一个新的SubprocVecEnv，并且统一进行step, reset, close等操作。</p>
+<pre><code class=" mermaid">classDiagram
+class SubprocVecEnv
+SubprocVecEnv: ps
+SubprocVecEnv: step()
+
+class ps
+ps: worker
+ps: remote
+ps: remote.recv()
+ps: remote.send()
+
+SubprocVecEnv &lt;-- ps
+
+class worker
+worker: FootballEnv
+
+ps &lt;-- worker
+</code></pre>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E7%AC%94%E8%AE%B0/" class="category-chain-item">笔记</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E7%AC%94%E8%AE%B0/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/" class="category-chain-item">强化学习</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/MAPPO/">#MAPPO</a>
+      
+        <a href="/tags/MARL/">#MARL</a>
+      
+        <a href="/tags/RL/">#RL</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>MAPPO的实现细节(一)</div>
+      <div>https://coldison.github.io/2022/07/20/MAPPO的实现细节(一)/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Coldison</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年7月20日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2022年9月1日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/07/26/torch%E7%9A%84%E4%BD%BF%E7%94%A8%E7%B4%A2%E5%BC%95/" title="torch的使用索引">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">torch的使用索引</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/07/19/%E5%A4%8D%E5%88%B6%E5%8D%9A%E5%AE%A2%E5%9B%AD%E6%88%96%E8%80%85CSDN%E6%96%87%E7%AB%A0/" title="复制博客园或者CSDN文章">
+                        <span class="hidden-mobile">复制博客园或者CSDN文章</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'Coldison/Blog-Comments');
+      s.setAttribute('issue-term', 'url');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

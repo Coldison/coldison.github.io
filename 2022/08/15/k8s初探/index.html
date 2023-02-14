@@ -1,0 +1,813 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/batman.png">
+  <link rel="icon" href="/img/batman.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#474b4c">
+  <meta name="author" content="Coldison">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="看《Kubernates in Action》做一点笔记。 minikube文档基于minikube的kubernetes官方教程 容器容器技术是一种轻量级的虚拟化技术，在Linux架构中，可以通过命名空间跟用户组构建一个与主机相互隔离，占用指定计算资源的进程。在容器中一般可以不受影响地运行应用程序。 Kubernates 集群架构k8s简单来说就是对容器进行统一管理跟调度的软件工具。从架构上分为">
+<meta property="og:type" content="article">
+<meta property="og:title" content="k8s初探">
+<meta property="og:url" content="https://coldison.github.io/2022/08/15/k8s%E5%88%9D%E6%8E%A2/index.html">
+<meta property="og:site_name" content="凉快Coldison">
+<meta property="og:description" content="看《Kubernates in Action》做一点笔记。 minikube文档基于minikube的kubernetes官方教程 容器容器技术是一种轻量级的虚拟化技术，在Linux架构中，可以通过命名空间跟用户组构建一个与主机相互隔离，占用指定计算资源的进程。在容器中一般可以不受影响地运行应用程序。 Kubernates 集群架构k8s简单来说就是对容器进行统一管理跟调度的软件工具。从架构上分为">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtoNWRjU1ZjMGRRaEhmam1pUmc_ZT16NUJBU3I.png">
+<meta property="og:image" content="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtoNWRZbDVFcWU1eEg2LWp3dGc_ZT01MmNwRXA.png">
+<meta property="article:published_time" content="2022-08-15T06:03:26.000Z">
+<meta property="article:modified_time" content="2022-08-29T06:58:44.724Z">
+<meta property="article:author" content="Coldison">
+<meta property="article:tag" content="docker">
+<meta property="article:tag" content="容器">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="kubernates">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtoNWRjU1ZjMGRRaEhmam1pUmc_ZT16NUJBU3I.png">
+<meta name="twitter:creator" content="@Coldison">
+<meta name="twitter:site" content="coldison.github.io">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>k8s初探 - 凉快Coldison</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"coldison.github.io","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#7e2065","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading2.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Coldison</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/grey.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="k8s初探"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-08-15 14:03" pubdate>
+          2022年8月15日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          24 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">k8s初探</h1>
+            
+              <p class="note note-info">
+                
+                  
+                    本文最后更新于：6 个月前
+                  
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <p>看<a target="_blank" rel="noopener" href="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL2IvcyFBa3A3T0FGTWxmRUtoNWRVS1ZUaWhIMjZsVGxUTXc_ZT03VWlzemw.pdf">《Kubernates in Action》</a>做一点笔记。</p>
+<p><a target="_blank" rel="noopener" href="https://minikube.sigs.k8s.io/docs/">minikube文档</a><br><a target="_blank" rel="noopener" href="https://kubernetes.io/zh-cn/docs/tutorials/kubernetes-basics/">基于minikube的kubernetes官方教程</a></p>
+<h3 id="容器"><a href="#容器" class="headerlink" title="容器"></a>容器</h3><p>容器技术是一种轻量级的虚拟化技术，在Linux架构中，可以通过命名空间跟用户组构建一个与主机相互隔离，占用指定计算资源的进程。在容器中一般可以不受影响地运行应用程序。<br><img src="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtoNWRjU1ZjMGRRaEhmam1pUmc_ZT16NUJBU3I.png" srcset="/img/loading2.gif" lazyload alt="虚拟机与容器"></p>
+<h3 id="Kubernates-集群架构"><a href="#Kubernates-集群架构" class="headerlink" title="Kubernates 集群架构"></a>Kubernates 集群架构</h3><p>k8s简单来说就是对容器进行统一管理跟调度的软件工具。从架构上分为两部分：</p>
+<p><img src="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtoNWRZbDVFcWU1eEg2LWp3dGc_ZT01MmNwRXA.png" srcset="/img/loading2.gif" lazyload alt="k8s集群架构"></p>
+<h3 id="k8s对容器的管理"><a href="#k8s对容器的管理" class="headerlink" title="k8s对容器的管理"></a>k8s对容器的管理</h3><ol>
+<li>根据应用的描述信息将对应数量的容器或者容器集合</li>
+<li>k8s可以根据负载自动决定一个应用程序的最佳副本数量，自动调整副本数。</li>
+<li>（pod）调度到工作节点上，工作节点上的Kubelets将告知Docker从镜像仓库中拉取容器镜像并且运行容器。</li>
+<li>k8s会不断地确认应用程序的部署状态始终与描述相匹配。如果其中一个进程崩溃，k8s会自动重新部署该进程。如果整个工作节点都死亡或者无法访问，则k8s会在新节点上部署故障节点中运行的所有容器并且运行。</li>
+<li>kube-proxy可以为相同的服务配置一个静态ip地址，这样不管容器如何移动或者增减，都可以通过该ip地址访问该服务。还可以确保服务的链接可以跨提供服务的容器实现负载均衡。</li>
+</ol>
+<h3 id="docker基础命令"><a href="#docker基础命令" class="headerlink" title="docker基础命令"></a>docker基础命令</h3><p>docker使用主要三部分：</p>
+<pre><code class=" mermaid">graph LR
+A[docker]--&gt;B[docker image]--&gt;C[docker container]
+</code></pre>
+
+<p>其中container是最后运行的容器实例，而image是容器本身的镜像文件，通过镜像可以build容器实例。docker本身则是对镜像和容器进行管理。以下是一些命令：</p>
+<ul>
+<li><p>构建容器镜像：<code>docker build -t IMAGE DOCKERFILEPATH</code>，使用DOCKERFILEPATH下的dockerfile文件构建名叫kubia的镜像。</p>
+</li>
+<li><p>显示镜像列表：<code>docker images</code>。</p>
+</li>
+<li><p>删除某一镜像：<code>docker rmi IMAGE</code>。</p>
+</li>
+<li><p>运行容器镜像并绑定端口：<code>docker run --name CONTAINER -p PORT:PORT -d IMAGE</code>。</p>
+</li>
+<li><p>获取容器信息：<code>docker ps</code>，<code>docker inspect CONTAINER</code>会有更详细的信息。</p>
+</li>
+<li><p>运行容器shell：<code>docker exec -it kubia-container bash</code>，前提是镜像本身包含了bash shell，<code>-i</code>保证标准输入流开放，<code>-t</code>分配一个伪终端，两个选项在一起才能正常运行bash。</p>
+</li>
+<li><p>开启&#x2F;重启容器：<code>docker start CONTAINER</code>&#x2F;<code>docker restart CONTAINER</code>。</p>
+</li>
+<li><p>停止容器：<code>docker stop CONTAINER</code>。</p>
+</li>
+<li><p>删除容器: <code>docker rm CONTAINER</code>。</p>
+</li>
+<li><p>为镜像添加标签：<code>docker tag IMAGE NEWTAG</code>，标签即为镜像的别名。</p>
+</li>
+<li><p>推送镜像到docker hub：<code>docker push TAG</code>。</p>
+</li>
+</ul>
+<h3 id="安装Minikube"><a href="#安装Minikube" class="headerlink" title="安装Minikube"></a>安装Minikube</h3><p>minikube是用于构建本地单节点集群的工具，主要用于测试k8s和本地开发应用。配置多节点或者云平台生产环境需要使用更多的k8s集群需要参考<a target="_blank" rel="noopener" href="https://kubernetes.io/">https://kubernetes.io/</a>。</p>
+<p>最新版本的minikube集成了kvm&#x2F;virtualbox的底座，所以不需要额外安装vm。</p>
+<p>下载并安装最新版本的minikube：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash">curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 &amp;&amp; <span class="hljs-built_in">chmod</span> +x minikube<br>sudo <span class="hljs-built_in">mkdir</span> -p /usr/local/bin/ <br>sudo install minikube /usr/local/bin/<br></code></pre></td></tr></table></figure>
+
+<p>然后运行<code>minikube start --kubernetes-version=1.23.8</code>，最新版本的kubernetes会报错，所以这里最好指定kubernetes的镜像版本。如果提示docker版本过低请自行重装一下最新版本的docker。 运行成功会出现：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">* Done! kubectl is now configured to use &quot;minikube&quot; cluster and &quot;default&quot; namespace by d<br></code></pre></td></tr></table></figure>
+
+<p>要与kubernetes进行交互，还需要kubectl，注意需要安装对应版本的kubectl，否则会出现兼容性问题。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">curl -LO https://dl.k8s.io/release/v1.23.8/bin/linux/amd64/kubectl<br>sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl<br></code></pre></td></tr></table></figure>
+
+<p>然后运行<code>kubectl version</code>，会出现client与server的版本信息。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">Client Version: version.Info&#123;Major:&quot;1&quot;, Minor:&quot;23&quot;, GitVersion:&quot;v1.23.8&quot;, GitCommit:&quot;a12b886b1da059e0190c54d09c5eab5219dd7acf&quot;, GitTreeState:&quot;clean&quot;, BuildDate:&quot;2022-06-16T05:57:43Z&quot;, GoVersion:&quot;go1.17.11&quot;, Compiler:&quot;gc&quot;, Platform:&quot;linux/amd64&quot;&#125;<br>Server Version: version.Info&#123;Major:&quot;1&quot;, Minor:&quot;23&quot;, GitVersion:&quot;v1.23.8&quot;, GitCommit:&quot;a12b886b1da059e0190c54d09c5eab5219dd7acf&quot;, GitTreeState:&quot;clean&quot;, BuildDate:&quot;2022-06-16T05:51:36Z&quot;, GoVersion:&quot;go1.17.11&quot;, Compiler:&quot;gc&quot;, Platform:&quot;linux/amd64&quot;&#125;<br></code></pre></td></tr></table></figure>
+
+<p>运行<code>kubectl cluster-info</code>查看集群信息。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">Kubernetes control plane is running at https://192.168.49.2:8443<br>CoreDNS is running at https://192.168.49.2:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy<br></code></pre></td></tr></table></figure>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%95%99%E7%A8%8B/" class="category-chain-item">教程</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%95%99%E7%A8%8B/%E5%88%86%E5%B8%83%E5%BC%8F%E8%AE%A1%E7%AE%97/" class="category-chain-item">分布式计算</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/docker/">#docker</a>
+      
+        <a href="/tags/%E5%AE%B9%E5%99%A8/">#容器</a>
+      
+        <a href="/tags/linux/">#linux</a>
+      
+        <a href="/tags/kubernates/">#kubernates</a>
+      
+        <a href="/tags/k8s/">#k8s</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>k8s初探</div>
+      <div>https://coldison.github.io/2022/08/15/k8s初探/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Coldison</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年8月15日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2022年8月29日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/08/19/%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2fauxpilot/" title="本地部署fauxpilot">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">本地部署fauxpilot</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/07/27/python%E7%9A%84%E4%BD%BF%E7%94%A8%E7%B4%A2%E5%BC%95/" title="python的使用索引">
+                        <span class="hidden-mobile">python的使用索引</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'Coldison/Blog-Comments');
+      s.setAttribute('issue-term', 'url');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

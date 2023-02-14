@@ -1,0 +1,780 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/batman.png">
+  <link rel="icon" href="/img/batman.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#474b4c">
+  <meta name="author" content="Coldison">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="由于copilot决定要收费，而且代码上传到对面的服务器也存在安全上的疑虑。小伙伴给我推了fauxpilot，正好组里面显卡闲置，所以自己本地部署了一下。由于使用的是shell脚本，因此可能需要注意下不同系统的编码问题，直接在linux上git clone或者解压。 包和依赖 安装Docker。 安装docker compose &gt;&#x3D; 1.28。Docker Compose是一个用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="本地部署fauxpilot">
+<meta property="og:url" content="https://coldison.github.io/2022/08/19/%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2fauxpilot/index.html">
+<meta property="og:site_name" content="凉快Coldison">
+<meta property="og:description" content="由于copilot决定要收费，而且代码上传到对面的服务器也存在安全上的疑虑。小伙伴给我推了fauxpilot，正好组里面显卡闲置，所以自己本地部署了一下。由于使用的是shell脚本，因此可能需要注意下不同系统的编码问题，直接在linux上git clone或者解压。 包和依赖 安装Docker。 安装docker compose &gt;&#x3D; 1.28。Docker Compose是一个用">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtoNWdMN1N0N3VtdkZGVFo4cFE_ZT03VDlYaDI.png">
+<meta property="article:published_time" content="2022-08-19T07:38:56.000Z">
+<meta property="article:modified_time" content="2022-09-22T06:54:43.840Z">
+<meta property="article:author" content="Coldison">
+<meta property="article:tag" content="python">
+<meta property="article:tag" content="copilot">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtoNWdMN1N0N3VtdkZGVFo4cFE_ZT03VDlYaDI.png">
+<meta name="twitter:creator" content="@Coldison">
+<meta name="twitter:site" content="coldison.github.io">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>本地部署fauxpilot - 凉快Coldison</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"coldison.github.io","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#7e2065","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading2.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Coldison</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/grey.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="本地部署fauxpilot"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-08-19 15:38" pubdate>
+          2022年8月19日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          10k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          84 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">本地部署fauxpilot</h1>
+            
+              <p class="note note-info">
+                
+                  
+                    本文最后更新于：5 个月前
+                  
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <p>由于copilot决定要收费，而且代码上传到对面的服务器也存在安全上的疑虑。小伙伴给我推了<a target="_blank" rel="noopener" href="https://github.com/moyix/fauxpilot">fauxpilot</a>，正好组里面显卡闲置，所以自己本地部署了一下。由于使用的是shell脚本，因此可能需要注意下不同系统的编码问题，直接在linux上git clone或者解压。</p>
+<h3 id="包和依赖"><a href="#包和依赖" class="headerlink" title="包和依赖"></a>包和依赖</h3><ul>
+<li>安装Docker。</li>
+<li>安装docker compose &gt;&#x3D; 1.28。Docker Compose是一个用来定义和运行复杂应用的Docker工具。一个使用Docker容器的应用，通常由多个容器组成。使用Docker Compose不再需要使用shell脚本来启动容器。 Compose 通过一个yml配置文件来管理多个Docker容器，在配置文件中，所有的容器通过services来定义，然后使用docker compose脚本来启动，停止和重启应用，和应用中的服务以及所有依赖服务的容器，非常适合组合使用多个容器进行开发的场景。</li>
+<li>NVIDIA算力 &gt;&#x3D; 7.0的GPU，根据显存选择合适的模型。</li>
+<li>安装nvidia-docker，这是nvidia弄出的链接显卡的容器技术。</li>
+<li>curl和zstd用于下载与解压模型，建议提前检查有没有安装。</li>
+</ul>
+<h3 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h3><p>参见README。</p>
+<ol>
+<li><p>运行 <code>bash setup.sh</code>，我习惯使用bash命令。按照提示，输入命令，该脚本会下载对应的模型并且配置config.env文件，主要是一些参数。以下是我的示例。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs config">MODEL=codegen-2B-mono<br>NUM_GPUS=1<br>MODEL_DIR=/data/ds/fauxpilot-main/models<br></code></pre></td></tr></table></figure>
+
+<p>如果要重新部署，需要先删除config.env文件，否则脚本还是会执行原本的配置。</p>
+</li>
+<li><p>运行 <code>bash launch.sh</code>。读取对应的参数并且执行 <code>docker compose</code>命令。</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-attr">version:</span> <span class="hljs-string">&#x27;3.3&#x27;</span><br><span class="hljs-attr">services:</span><br>    <span class="hljs-attr">triton:</span><br>        <span class="hljs-attr">image:</span> <span class="hljs-string">moyix/triton_with_ft:22.06</span><br>        <span class="hljs-attr">command:</span> <span class="hljs-string">bash</span> <span class="hljs-string">-c</span> <span class="hljs-string">&quot;CUDA_VISIBLE_DEVICES=$&#123;GPUS&#125; mpirun -n 1 --allow-run-as-root /opt/tritonserver/bin/tritonserver --model-repository=/model&quot;</span><br>        <span class="hljs-attr">shm_size:</span> <span class="hljs-string">&#x27;2gb&#x27;</span><br>        <span class="hljs-attr">volumes:</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">$&#123;MODEL_DIR&#125;:/model</span><br>        <span class="hljs-attr">ports:</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">&quot;8000:8000&quot;</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">&quot;8001:8001&quot;</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">&quot;8002:8002&quot;</span><br>        <span class="hljs-attr">deploy:</span><br>        <span class="hljs-attr">resources:</span><br>            <span class="hljs-attr">reservations:</span><br>            <span class="hljs-attr">devices:</span><br>                <span class="hljs-bullet">-</span> <span class="hljs-attr">driver:</span> <span class="hljs-string">nvidia</span><br>                <span class="hljs-attr">count:</span> <span class="hljs-string">all</span><br>                <span class="hljs-attr">capabilities:</span> [<span class="hljs-string">gpu</span>]<br>    <span class="hljs-attr">copilot_proxy:</span><br>        <span class="hljs-attr">image:</span> <span class="hljs-string">moyix/copilot_proxy:latest</span><br>        <span class="hljs-attr">command:</span> <span class="hljs-string">python3</span> <span class="hljs-string">-m</span> <span class="hljs-string">flask</span> <span class="hljs-string">run</span> <span class="hljs-string">--host=0.0.0.0</span> <span class="hljs-string">--port=5000</span><br>        <span class="hljs-attr">ports:</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">&quot;5000:5000&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>以上就是docker_compose.yml文件，可以看到主要运行了两个服务，一个推理服务，一个是flask网络应用。使用 <code>docker ps</code>可以查询是否正在运行。<br><img src="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtoNWdMN1N0N3VtdkZGVFo4cFE_ZT03VDlYaDI.png" srcset="/img/loading2.gif" lazyload alt="docker进程"></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ ./launch.sh <br>[+] Running 2/0<br>⠿ Container fauxpilot-triton-1         Created                                                                                                                                                                                                                                                                                             0.0s<br>⠿ Container fauxpilot-copilot_proxy-1  Created                                                                                                                                                                                                                                                                                             0.0s<br>Attaching to fauxpilot-copilot_proxy-1, fauxpilot-triton-1<br>fauxpilot-triton-1         | <br>fauxpilot-triton-1         | =============================<br>fauxpilot-triton-1         | == Triton Inference Server ==<br>fauxpilot-triton-1         | =============================<br>fauxpilot-triton-1         | <br>fauxpilot-triton-1         | NVIDIA Release 22.06 (build 39726160)<br>fauxpilot-triton-1         | Triton Server Version 2.23.0<br>fauxpilot-triton-1         | <br>fauxpilot-triton-1         | Copyright (c) 2018-2022, NVIDIA CORPORATION &amp; AFFILIATES.  All rights reserved.<br>fauxpilot-triton-1         | <br>fauxpilot-triton-1         | Various files include modifications (c) NVIDIA CORPORATION &amp; AFFILIATES.  All rights reserved.<br>fauxpilot-triton-1         | <br>fauxpilot-triton-1         | This container image and its contents are governed by the NVIDIA Deep Learning Container License.<br>fauxpilot-triton-1         | By pulling and using the container, you accept the terms and conditions of this license:<br>fauxpilot-triton-1         | https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license<br>fauxpilot-copilot_proxy-1  | WARNING: This is a development server. Do not use it <span class="hljs-keyword">in</span> a production deployment. Use a production WSGI server instead.<br>fauxpilot-copilot_proxy-1  |  * Debug mode: off<br>fauxpilot-copilot_proxy-1  |  * Running on all addresses (0.0.0.0)<br>fauxpilot-copilot_proxy-1  |    WARNING: This is a development server. Do not use it <span class="hljs-keyword">in</span> a production deployment.<br>fauxpilot-copilot_proxy-1  |  * Running on http://127.0.0.1:5000<br>fauxpilot-copilot_proxy-1  |  * Running on http://172.18.0.3:5000 (Press CTRL+C to quit)<br>fauxpilot-triton-1         | <br>fauxpilot-triton-1         | ERROR: This container was built <span class="hljs-keyword">for</span> NVIDIA Driver Release 515.48 or later, but<br>fauxpilot-triton-1         |        version  was detected and compatibility mode is UNAVAILABLE.<br>fauxpilot-triton-1         | <br>fauxpilot-triton-1         |        [[]]<br>fauxpilot-triton-1         | <br>fauxpilot-triton-1         | I0803 01:51:02.690042 93 pinned_memory_manager.cc:240] Pinned memory pool is created at <span class="hljs-string">&#x27;0x7f6104000000&#x27;</span> with size 268435456<br>fauxpilot-triton-1         | I0803 01:51:02.690461 93 cuda_memory_manager.cc:105] CUDA memory pool is created on device 0 with size 67108864<br>fauxpilot-triton-1         | I0803 01:51:02.692434 93 model_repository_manager.cc:1191] loading: fastertransformer:1<br>fauxpilot-triton-1         | I0803 01:51:02.936798 93 libfastertransformer.cc:1226] TRITONBACKEND_Initialize: fastertransformer<br>fauxpilot-triton-1         | I0803 01:51:02.936818 93 libfastertransformer.cc:1236] Triton TRITONBACKEND API version: 1.10<br>fauxpilot-triton-1         | I0803 01:51:02.936821 93 libfastertransformer.cc:1242] <span class="hljs-string">&#x27;fastertransformer&#x27;</span> TRITONBACKEND API version: 1.10<br>fauxpilot-triton-1         | I0803 01:51:02.936850 93 libfastertransformer.cc:1274] TRITONBACKEND_ModelInitialize: fastertransformer (version 1)<br>fauxpilot-triton-1         | W0803 01:51:02.937855 93 libfastertransformer.cc:149] model configuration:<br>fauxpilot-triton-1         | &#123;<br>[... lots more output trimmed ...]<br>fauxpilot-triton-1         | I0803 01:51:04.711929 93 libfastertransformer.cc:321] After Loading Model:<br>fauxpilot-triton-1         | I0803 01:51:04.712427 93 libfastertransformer.cc:537] Model instance is created on GPU NVIDIA RTX A6000<br>fauxpilot-triton-1         | I0803 01:51:04.712694 93 model_repository_manager.cc:1345] successfully loaded <span class="hljs-string">&#x27;fastertransformer&#x27;</span> version 1<br>fauxpilot-triton-1         | I0803 01:51:04.712841 93 server.cc:556] <br>fauxpilot-triton-1         | +------------------+------+<br>fauxpilot-triton-1         | | Repository Agent | Path |<br>fauxpilot-triton-1         | +------------------+------+<br>fauxpilot-triton-1         | +------------------+------+<br>fauxpilot-triton-1         | <br>fauxpilot-triton-1         | I0803 01:51:04.712916 93 server.cc:583] <br>fauxpilot-triton-1         | +-------------------+-----------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+<br>fauxpilot-triton-1         | | Backend           | Path                                                                        | Config                                                                                                                                                         |<br>fauxpilot-triton-1         | +-------------------+-----------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+<br>fauxpilot-triton-1         | | fastertransformer | /opt/tritonserver/backends/fastertransformer/libtriton_fastertransformer.so | &#123;<span class="hljs-string">&quot;cmdline&quot;</span>:&#123;<span class="hljs-string">&quot;auto-complete-config&quot;</span>:<span class="hljs-string">&quot;false&quot;</span>,<span class="hljs-string">&quot;min-compute-capability&quot;</span>:<span class="hljs-string">&quot;6.000000&quot;</span>,<span class="hljs-string">&quot;backend-directory&quot;</span>:<span class="hljs-string">&quot;/opt/tritonserver/backends&quot;</span>,<span class="hljs-string">&quot;default-max-batch-size&quot;</span>:<span class="hljs-string">&quot;4&quot;</span>&#125;&#125; |<br>fauxpilot-triton-1         | +-------------------+-----------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+<br>fauxpilot-triton-1         | <br>fauxpilot-triton-1         | I0803 01:51:04.712959 93 server.cc:626] <br>fauxpilot-triton-1         | +-------------------+---------+--------+<br>fauxpilot-triton-1         | | Model             | Version | Status |<br>fauxpilot-triton-1         | +-------------------+---------+--------+<br>fauxpilot-triton-1         | | fastertransformer | 1       | READY  |<br>fauxpilot-triton-1         | +-------------------+---------+--------+<br>fauxpilot-triton-1         | <br>fauxpilot-triton-1         | I0803 01:51:04.738989 93 metrics.cc:650] Collecting metrics <span class="hljs-keyword">for</span> GPU 0: NVIDIA RTX A6000<br>fauxpilot-triton-1         | I0803 01:51:04.739373 93 tritonserver.cc:2159] <br>fauxpilot-triton-1         | +----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+<br>fauxpilot-triton-1         | | Option                           | Value                                                                                                                                                                                        |<br>fauxpilot-triton-1         | +----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+<br>fauxpilot-triton-1         | | server_id                        | triton                                                                                                                                                                                       |<br>fauxpilot-triton-1         | | server_version                   | 2.23.0                                                                                                                                                                                       |<br>fauxpilot-triton-1         | | server_extensions                | classification sequence model_repository model_repository(unload_dependents) schedule_policy model_configuration system_shared_memory cuda_shared_memory binary_tensor_data statistics trace |<br>fauxpilot-triton-1         | | model_repository_path[0]         | /model                                                                                                                                                                                       |<br>fauxpilot-triton-1         | | model_control_mode               | MODE_NONE                                                                                                                                                                                    |<br>fauxpilot-triton-1         | | strict_model_config              | 1                                                                                                                                                                                            |<br>fauxpilot-triton-1         | | rate_limit                       | OFF                                                                                                                                                                                          |<br>fauxpilot-triton-1         | | pinned_memory_pool_byte_size     | 268435456                                                                                                                                                                                    |<br>fauxpilot-triton-1         | | cuda_memory_pool_byte_size&#123;0&#125;    | 67108864                                                                                                                                                                                     |<br>fauxpilot-triton-1         | | response_cache_byte_size         | 0                                                                                                                                                                                            |<br>fauxpilot-triton-1         | | min_supported_compute_capability | 6.0                                                                                                                                                                                          |<br>fauxpilot-triton-1         | | strict_readiness                 | 1                                                                                                                                                                                            |<br>fauxpilot-triton-1         | | exit_timeout                     | 30                                                                                                                                                                                           |<br>fauxpilot-triton-1         | +----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+<br>fauxpilot-triton-1         | <br>fauxpilot-triton-1         | I0803 01:51:04.740423 93 grpc_server.cc:4587] Started GRPCInferenceService at 0.0.0.0:8001<br>fauxpilot-triton-1         | I0803 01:51:04.740608 93 http_server.cc:3303] Started HTTPService at 0.0.0.0:8000<br>fauxpilot-triton-1         | I0803 01:51:04.781561 93 http_server.cc:178] Started Metrics Service at 0.0.0.0:8002<br></code></pre></td></tr></table></figure>
+
+<p>运行成功后最后会有服务开启的提示。</p>
+</li>
+<li><p>创建交互API</p>
+</li>
+</ol>
+<p>这里需要安装openai的包。</p>
+<figure class="highlight ipython"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs ipython">$ ipython<br>Python <span class="hljs-number">3.8</span><span class="hljs-number">.10</span> (default, Mar <span class="hljs-number">15</span> <span class="hljs-number">2022</span>, <span class="hljs-number">12</span>:<span class="hljs-number">22</span>:08) <br><span class="hljs-type">Type</span> <span class="hljs-string">&#x27;copyright&#x27;</span>, <span class="hljs-string">&#x27;credits&#x27;</span> <span class="hljs-keyword">or</span> <span class="hljs-string">&#x27;license&#x27;</span> <span class="hljs-keyword">for</span> more information<br>IPython <span class="hljs-number">8.2</span><span class="hljs-number">.0</span> -- An enhanced Interactive Python. <span class="hljs-type">Type</span> <span class="hljs-string">&#x27;?&#x27;</span> <span class="hljs-keyword">for</span> <span class="hljs-built_in">help</span>.<br><br>In [<span class="hljs-number">1</span>]: <span class="hljs-keyword">import</span> openai<br><br>In [<span class="hljs-number">2</span>]: openai.api_key = <span class="hljs-string">&#x27;dummy&#x27;</span><br><br>In [<span class="hljs-number">3</span>]: openai.api_base = <span class="hljs-string">&#x27;http://127.0.0.1:5000/v1&#x27;</span><br><br>In [<span class="hljs-number">4</span>]: result = openai.Completion.create(engine=<span class="hljs-string">&#x27;codegen&#x27;</span>, prompt=<span class="hljs-string">&#x27;def hello&#x27;</span>, max_tokens=<span class="hljs-number">16</span>, temperature=<span class="hljs-number">0.1</span>, stop=[<span class="hljs-string">&quot;\n\n&quot;</span>])<br><br>In [<span class="hljs-number">5</span>]: result<br>Out[<span class="hljs-number">5</span>]: <br>&lt;OpenAIObject text_completion <span class="hljs-built_in">id</span>=cmpl-6hqu8Rcaq25078IHNJNVooU4xLY6w at <span class="hljs-number">0x7f602c3d2f40</span>&gt; JSON: &#123;<br>  <span class="hljs-string">&quot;choices&quot;</span>: [<br>    &#123;<br>      <span class="hljs-string">&quot;finish_reason&quot;</span>: <span class="hljs-string">&quot;stop&quot;</span>,<br>      <span class="hljs-string">&quot;index&quot;</span>: <span class="hljs-number">0</span>,<br>      <span class="hljs-string">&quot;logprobs&quot;</span>: null,<br>      <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;() &#123;\n    return \&quot;Hello, World!\&quot;;\n&#125;&quot;</span><br>    &#125;<br>  ],<br>  <span class="hljs-string">&quot;created&quot;</span>: <span class="hljs-number">1659492191</span>,<br>  <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;cmpl-6hqu8Rcaq25078IHNJNVooU4xLY6w&quot;</span>,<br>  <span class="hljs-string">&quot;model&quot;</span>: <span class="hljs-string">&quot;codegen&quot;</span>,<br>  <span class="hljs-string">&quot;object&quot;</span>: <span class="hljs-string">&quot;text_completion&quot;</span>,<br>  <span class="hljs-string">&quot;usage&quot;</span>: &#123;<br>    <span class="hljs-string">&quot;completion_tokens&quot;</span>: <span class="hljs-number">15</span>,<br>    <span class="hljs-string">&quot;prompt_tokens&quot;</span>: <span class="hljs-number">2</span>,<br>    <span class="hljs-string">&quot;total_tokens&quot;</span>: <span class="hljs-number">17</span><br>  &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>配置copilot插件<br>修改vscode配置文件，在全局或者项目中打开 <code>setting.json</code>，编辑如下内容即可：</li>
+</ol>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs json"><span class="hljs-attr">&quot;github.copilot.advanced&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">&#123;</span><br>    <span class="hljs-attr">&quot;debug.overrideEngine&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;codegen&quot;</span><span class="hljs-punctuation">,</span><br>    <span class="hljs-attr">&quot;debug.testOverrideProxyUrl&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;http://localhost:5000&quot;</span><span class="hljs-punctuation">,</span><br>    <span class="hljs-attr">&quot;debug.overrideProxyUrl&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;http://localhost:5000&quot;</span><br><span class="hljs-punctuation">&#125;</span><br></code></pre></td></tr></table></figure>
+
+<p>localhost改成具体的ip地址即可在内网使用。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%95%99%E7%A8%8B/" class="category-chain-item">教程</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%95%99%E7%A8%8B/Docker%E4%BD%BF%E7%94%A8/" class="category-chain-item">Docker使用</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/python/">#python</a>
+      
+        <a href="/tags/copilot/">#copilot</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>本地部署fauxpilot</div>
+      <div>https://coldison.github.io/2022/08/19/本地部署fauxpilot/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Coldison</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年8月19日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2022年9月22日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/09/10/%E4%B8%AD%E7%A7%8B%E8%8A%82%E9%9A%8F%E6%84%9F2022/" title="中秋节随感">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">中秋节随感</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/08/15/k8s%E5%88%9D%E6%8E%A2/" title="k8s初探">
+                        <span class="hidden-mobile">k8s初探</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'Coldison/Blog-Comments');
+      s.setAttribute('issue-term', 'url');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

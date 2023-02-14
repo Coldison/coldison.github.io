@@ -1,0 +1,772 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/batman.png">
+  <link rel="icon" href="/img/batman.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#474b4c">
+  <meta name="author" content="Coldison">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="命令行运行Python文件时，可以添加相应的参数。如： 1python add.py 1 2  在运行时，from sys import argv就可以读取命令行参数，通常是一个列表，此处的 argv &#x3D; [add.py, 1, 2]。对于比较复杂的程序，使用这种方式读取命令行参数显然还是比较麻烦的。于是就引入了 argparse模块。具体可以参考官方文档：Parser for command-l">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ArgParser的使用">
+<meta property="og:url" content="https://coldison.github.io/2022/07/13/ArgParser%E7%9A%84%E4%BD%BF%E7%94%A8/index.html">
+<meta property="og:site_name" content="凉快Coldison">
+<meta property="og:description" content="命令行运行Python文件时，可以添加相应的参数。如： 1python add.py 1 2  在运行时，from sys import argv就可以读取命令行参数，通常是一个列表，此处的 argv &#x3D; [add.py, 1, 2]。对于比较复杂的程序，使用这种方式读取命令行参数显然还是比较麻烦的。于是就引入了 argparse模块。具体可以参考官方文档：Parser for command-l">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://by3302files.storage.live.com/y4mJNjqUbkRtw0yibJEHVpamztvolm22ce2nFuZtxVZ1VgibrF8mFt7uTu8S6X0bUwu4MLGj3rt8bi2poj-A9BdaCKfHXgxhelLV3cagIaCpB8xdqqysD-zGisjV2LvIlWMmRYJtE9MM9EezEcqe7wOk5HP9UGGuh-GqBYm6Tv2uxBrieCXs9v3tuQEyo7aaU-J?width=817&height=524&cropmode=none">
+<meta property="og:image" content="https://by3302files.storage.live.com/y4maWV3d07DQSL5IGeVCVf7D4vdZuNyY-C-vBuLRdFcLDnlqzGs-ZJOWvZn1knE5MzNXk4jqMItmQncI6fsGnNycdxUQ-oeUzaTMmCe6xgn7rorPiraIFop-iOfNICje333kKrZR4TTAAhYr6sdoHoNQs0kR6kAAb95R4RddtSjjkbY5als1fbhwmMCQFEo6VH2?width=802&height=491&cropmode=none">
+<meta property="article:published_time" content="2022-07-13T05:35:25.000Z">
+<meta property="article:modified_time" content="2022-07-13T06:55:04.255Z">
+<meta property="article:author" content="Coldison">
+<meta property="article:tag" content="python">
+<meta property="article:tag" content="argparse">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://by3302files.storage.live.com/y4mJNjqUbkRtw0yibJEHVpamztvolm22ce2nFuZtxVZ1VgibrF8mFt7uTu8S6X0bUwu4MLGj3rt8bi2poj-A9BdaCKfHXgxhelLV3cagIaCpB8xdqqysD-zGisjV2LvIlWMmRYJtE9MM9EezEcqe7wOk5HP9UGGuh-GqBYm6Tv2uxBrieCXs9v3tuQEyo7aaU-J?width=817&height=524&cropmode=none">
+<meta name="twitter:creator" content="@Coldison">
+<meta name="twitter:site" content="coldison.github.io">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>ArgParser的使用 - 凉快Coldison</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"coldison.github.io","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#7e2065","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading2.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Coldison</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/grey.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="ArgParser的使用"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-07-13 13:35" pubdate>
+          2022年7月13日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          19 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">ArgParser的使用</h1>
+            
+              <p class="note note-info">
+                
+                  
+                    本文最后更新于：7 个月前
+                  
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <p>命令行运行Python文件时，可以添加相应的参数。如：</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-keyword">python</span> <span class="hljs-built_in">add</span>.<span class="hljs-keyword">py</span> <span class="hljs-number">1</span> <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
+
+<p>在运行时，<code>from sys import argv</code>就可以读取命令行参数，通常是一个列表，此处的 <code>argv = [add.py, 1, 2]</code>。对于比较复杂的程序，使用这种方式读取命令行参数显然还是比较麻烦的。于是就引入了 <code>argparse</code>模块。具体可以参考官方文档：<a target="_blank" rel="noopener" href="https://docs.python.org/3/library/argparse.html" title="argparse官方文档">Parser for command-line options, arguments and sub-commands</a></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> argparse<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">parse_args</span>():<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    :return:进行参数的解析</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    description = <span class="hljs-string">&quot;you should add those parameter&quot;</span>                   <span class="hljs-comment"># 步骤二</span><br>    parser = argparse.ArgumentParser(description=description)        <span class="hljs-comment"># 这些参数都有默认值，当调用parser.print_help()或者运行程序时由于参数不正确(此时python解释器其实也是调用了pring_help()方法)时，</span><br>                                                                     <span class="hljs-comment"># 会打印这些描述信息，一般只需要传递description参数，如上。</span><br>  <br>    parser.add_argument(<span class="hljs-string">&quot;-rp&quot;</span>, <span class="hljs-string">&quot;--replay_name&quot;</span>, default=<span class="hljs-string">&quot;test.zip&quot;</span>,<span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&quot;复盘名称&quot;</span>)<br>    parser.add_argument(<span class="hljs-string">&quot;-rv&quot;</span>, <span class="hljs-string">&quot;--redview_on&quot;</span>, action=<span class="hljs-string">&quot;store_true&quot;</span>, default=<span class="hljs-literal">False</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&quot;是否是红方视角&quot;</span>)<br>    parser.add_argument(<span class="hljs-string">&quot;-s&quot;</span>, <span class="hljs-string">&quot;--scene&quot;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">int</span>, default=<span class="hljs-number">20220621</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&quot;想定编号&quot;</span>)<br>    parser.add_argument(<span class="hljs-string">&quot;-dp&quot;</span>, <span class="hljs-string">&quot;--data_path&quot;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&quot;./logs/data/&quot;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&quot;解析数据路径&quot;</span>)<br>    parser.add_argument(<span class="hljs-string">&quot;-sc&quot;</span>, <span class="hljs-string">&quot;--scope_on&quot;</span>, action=<span class="hljs-string">&quot;store_true&quot;</span>, default=<span class="hljs-literal">False</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&quot;是否解析视野&quot;</span>)<br>  <br>    parser.print_help()<br>    <span class="hljs-keyword">return</span> parser.parse_args()<br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&quot;__main__&quot;</span>:<br>    args = parse_args()<br></code></pre></td></tr></table></figure>
+
+<p>先给出一个例子。具体的流程是：</p>
+<ul>
+<li><p>先实例化一个 <code>ArgumentParser</code>可以添加描述。</p>
+<ul>
+<li>官方文档中还有其余的属性<br><img src="https://by3302files.storage.live.com/y4mJNjqUbkRtw0yibJEHVpamztvolm22ce2nFuZtxVZ1VgibrF8mFt7uTu8S6X0bUwu4MLGj3rt8bi2poj-A9BdaCKfHXgxhelLV3cagIaCpB8xdqqysD-zGisjV2LvIlWMmRYJtE9MM9EezEcqe7wOk5HP9UGGuh-GqBYm6Tv2uxBrieCXs9v3tuQEyo7aaU-J?width=817&height=524&cropmode=none" srcset="/img/loading2.gif" lazyload alt="ArgumentParser" title="ArgumentParser属性"></li>
+</ul>
+</li>
+<li><p>然后调用 <code>add_argument</code>方法添加命令行选项<br><img src="https://by3302files.storage.live.com/y4maWV3d07DQSL5IGeVCVf7D4vdZuNyY-C-vBuLRdFcLDnlqzGs-ZJOWvZn1knE5MzNXk4jqMItmQncI6fsGnNycdxUQ-oeUzaTMmCe6xgn7rorPiraIFop-iOfNICje333kKrZR4TTAAhYr6sdoHoNQs0kR6kAAb95R4RddtSjjkbY5als1fbhwmMCQFEo6VH2?width=802&height=491&cropmode=none" srcset="/img/loading2.gif" lazyload alt="add_argument" title="add_argument方法 "></p>
+<ul>
+<li><p>name or flags用于识别参数选项，其中有-或者–前缀的是可选命令，如果不加前缀则是位置参数（positional argument) 如运行需要的文件名。</p>
+<figure class="highlight python-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs python-repl"><span class="hljs-meta prompt_">&gt;&gt;&gt;</span> <span class="language-python">parser = argparse.ArgumentParser(prog=<span class="hljs-string">&#x27;PROG&#x27;</span>)</span><br><span class="hljs-meta prompt_">&gt;&gt;&gt;</span> <span class="language-python">parser.add_argument(<span class="hljs-string">&#x27;-f&#x27;</span>, <span class="hljs-string">&#x27;--foo&#x27;</span>)</span><br><span class="hljs-meta prompt_">&gt;&gt;&gt;</span> <span class="language-python">parser.add_argument(<span class="hljs-string">&#x27;bar&#x27;</span>)</span><br><span class="hljs-meta prompt_">&gt;&gt;&gt;</span> <span class="language-python">parser.parse_args([<span class="hljs-string">&#x27;BAR&#x27;</span>])</span><br>Namespace(bar=&#x27;BAR&#x27;, foo=None)<br><span class="hljs-meta prompt_">&gt;&gt;&gt;</span> <span class="language-python">parser.parse_args([<span class="hljs-string">&#x27;BAR&#x27;</span>, <span class="hljs-string">&#x27;--foo&#x27;</span>, <span class="hljs-string">&#x27;FOO&#x27;</span>])</span><br>Namespace(bar=&#x27;BAR&#x27;, foo=&#x27;FOO&#x27;)<br><span class="hljs-meta prompt_">&gt;&gt;&gt;</span> <span class="language-python">parser.parse_args([<span class="hljs-string">&#x27;--foo&#x27;</span>, <span class="hljs-string">&#x27;FOO&#x27;</span>])</span><br>usage: PROG [-h] [-f FOO] bar<br>PROG: error: the following arguments are required: bar<br></code></pre></td></tr></table></figure></li>
+<li><p>action是指接受参数之后要执行的动作，通常是 <code>store_false</code>，<code>store_true</code>或者 <code>store_const</code>，不需要接受其余参数，直接将对应的选项变量保存为特定的值。这是使用得比较多的选项。<code>append</code>是一个特殊的action，它会将参数追加到列表中。<code>count</code>是一个特殊的action，它会将参数计数，并将计数值保存到变量中。</p>
+</li>
+<li><p>其他还有一些方法这里就不再赘述了，具体使用的时候可以参考官方文档。</p>
+</li>
+</ul>
+</li>
+<li><p>最后调用 <code>parse_args</code>方法解析命令行参数，返回一个 <code>Namespace</code>对象，其中包含了所有的参数。</p>
+</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%95%99%E7%A8%8B/" class="category-chain-item">教程</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%95%99%E7%A8%8B/python%E4%BD%BF%E7%94%A8/" class="category-chain-item">python使用</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/python/">#python</a>
+      
+        <a href="/tags/argparse/">#argparse</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>ArgParser的使用</div>
+      <div>https://coldison.github.io/2022/07/13/ArgParser的使用/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Coldison</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年7月13日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2022年7月13日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/07/18/python%E7%BC%96%E8%AF%91so%E5%92%8Cpyd%E6%96%87%E4%BB%B6/" title="python编译so和pyd文件">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">python编译so和pyd文件</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/06/24/Docker%E5%AE%89%E8%A3%85%E4%B8%8E%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E4%B8%80%E4%BA%9B%E6%93%8D%E4%BD%9C%E4%B8%8E%E9%97%AE%E9%A2%98/" title="Docker build中的常见错误及常用命令(未完)">
+                        <span class="hidden-mobile">Docker build中的常见错误及常用命令(未完)</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'Coldison/Blog-Comments');
+      s.setAttribute('issue-term', 'url');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

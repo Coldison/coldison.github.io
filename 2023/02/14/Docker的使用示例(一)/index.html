@@ -1,0 +1,1186 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/batman.png">
+  <link rel="icon" href="/img/batman.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#474b4c">
+  <meta name="author" content="Coldison">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Docker 官方文档 现在我们可以来实际实践一下docker技术。我这里的需求，在docker容器中运行c，通过host的端口连接指定的IP地址。这是基本的描述，还有如下的细节：  程序运行时需要在root目录下创建一个conf文件，因此需要先尝试docker的terminal。 程序作为模拟节点会从一个txt里面读取名称，希望和暴露的端口一起都作为镜像的参数，并且将参数写入相应的文件。  基础">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Docker的使用示例(一)">
+<meta property="og:url" content="https://coldison.github.io/2023/02/14/Docker%E7%9A%84%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B(%E4%B8%80)/index.html">
+<meta property="og:site_name" content="凉快Coldison">
+<meta property="og:description" content="Docker 官方文档 现在我们可以来实际实践一下docker技术。我这里的需求，在docker容器中运行c，通过host的端口连接指定的IP地址。这是基本的描述，还有如下的细节：  程序运行时需要在root目录下创建一个conf文件，因此需要先尝试docker的terminal。 程序作为模拟节点会从一个txt里面读取名称，希望和暴露的端口一起都作为镜像的参数，并且将参数写入相应的文件。  基础">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtpWmxCb2xyYTY1bUVHZFVYSnc_ZT1tbjFleXg.png">
+<meta property="article:published_time" content="2023-02-14T11:11:28.049Z">
+<meta property="article:modified_time" content="2022-10-11T03:06:16.293Z">
+<meta property="article:author" content="Coldison">
+<meta property="article:tag" content="容器">
+<meta property="article:tag" content="Docker">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtpWmxCb2xyYTY1bUVHZFVYSnc_ZT1tbjFleXg.png">
+<meta name="twitter:creator" content="@Coldison">
+<meta name="twitter:site" content="coldison.github.io">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Docker的使用示例(一) - 凉快Coldison</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"coldison.github.io","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":false,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#7e2065","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading2.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Coldison</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('https://by3302files.storage.live.com/y4mVKy0WXkP-rrMiBMo2rXOuUEXsECbgSnp8zCY1KkrOks5-HIrzWjyRq-Jesa0RkdQeyWpJuO3HZ_YQhy71cK8HUm-sc5RtA4ZqtnSC6XjpsbQOpJCI-PLq9d0bP2ZaayzKMq42hSibW1eyv8UYdqsrX-PMZCsqxVmDJ99IZsjbgX7eCytobaK0ffTFJrX-szw?width=3300&height=1118&cropmode=none') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Docker的使用示例(一)"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-02-14 19:11" pubdate>
+          2023年2月14日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          12k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          100 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Docker的使用示例(一)</h1>
+            
+              <p class="note note-info">
+                
+                  
+                    本文最后更新于：4 个月前
+                  
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <p><a target="_blank" rel="noopener" href="https://docs.docker.com/reference/">Docker 官方文档</a></p>
+<p>现在我们可以来实际实践一下docker技术。我这里的需求，在docker容器中运行c，通过host的端口连接指定的IP地址。这是基本的描述，还有如下的细节：</p>
+<ul>
+<li>程序运行时需要在root目录下创建一个conf文件，因此需要先尝试docker的terminal。</li>
+<li>程序作为模拟节点会从一个txt里面读取名称，希望和暴露的端口一起都作为镜像的参数，并且将参数写入相应的文件。</li>
+</ul>
+<h2 id="基础镜像CentOS测试"><a href="#基础镜像CentOS测试" class="headerlink" title="基础镜像CentOS测试"></a>基础镜像CentOS测试</h2><h3 id="将普通用户加入docker用户组"><a href="#将普通用户加入docker用户组" class="headerlink" title="将普通用户加入docker用户组"></a>将普通用户加入docker用户组</h3><p>普通用户需要加入docker用户组才能够使用docker。</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 切换成root用户</span><br>su - <br>sudo groupadd docker     <span class="hljs-comment">#添加docker用户组</span><br>sudo gpasswd -a <span class="hljs-variable">$USER</span> docker     <span class="hljs-comment">#将登陆用户加入到docker用户组中</span><br>newgrp docker     <span class="hljs-comment">#更新用户组</span><br>docker ps    <span class="hljs-comment">#测试docker命令是否可以使用sudo正常使用</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="dockerbuild镜像"><a href="#dockerbuild镜像" class="headerlink" title="dockerbuild镜像"></a>dockerbuild镜像</h3><p>由于docker是一层一层叠加，我们可以先从简单的开始，得到的镜像层可以复用。<br>简单的dockerfile:</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dockerfile"><span class="hljs-keyword">FROM</span> centos:<span class="hljs-number">7</span><br></code></pre></td></tr></table></figure>
+
+<p>简单的docker build命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker build -t <span class="hljs-built_in">test</span> .<br></code></pre></td></tr></table></figure>
+
+<p><code>-t</code>命令是指给镜像加一个tag名，对于镜像的识别除了依靠分配的十六进制的ID，主要依靠tag名，不同的tag在dockerhub中意味着不同的镜像。</p>
+<p>我们可以使用<code>docker image ls</code>查看创建的镜像目录，可以看到有两个镜像，一个是我们从<a href="docker.io">docker.io</a>中拉取的centos7镜像，另一个是我们加了tag之后的镜像。</p>
+<p><img src="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtoOUVvTkozUEZhU2NiVm9NN1E_ZT1FNkRCNVg.png" srcset="/img/loading2.gif" lazyload alt="docker image ls"></p>
+<h3 id="根据镜像创建容器"><a href="#根据镜像创建容器" class="headerlink" title="根据镜像创建容器"></a>根据镜像创建容器</h3><p>现在有了镜像我们可以根据镜像创建容器。可以查看官方文档：<a target="_blank" rel="noopener" href="https://docs.docker.com/engine/reference/run/">docker run reference</a>。</p>
+<p>基础的<code>docker run</code>命令有如下的形式：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker run [OPTIONS] IMAGE[:TAG|@DIGEST] [COMMAND] [ARG...]<br></code></pre></td></tr></table></figure>
+
+<p>镜像的开发者可以决定镜像的default设置：</p>
+<ul>
+<li>前台还是后台运行</li>
+<li>容器识别</li>
+<li>网络设置</li>
+<li>运行时的约束如CPU和内存</li>
+</ul>
+<p><code>docker run</code>命令可以重写覆盖镜像的几乎所有缺省设置，这也是为什么这条命令比其他docker命令复杂的原因。</p>
+<h3 id="容器的命令和交互"><a href="#容器的命令和交互" class="headerlink" title="容器的命令和交互"></a>容器的命令和交互</h3><p>在detached的模式下，当<code>docker run</code>运行容器的进程结束时，容器也会进入exited的状态。如果再加上<code>-rm</code>命令，则<code>docker run</code>进程结束或者守护进程结束时就会进入exited状态。对于有些即时的服务，这条命令可以轻松实现服务结束container退出，然后简单销毁就可以了。</p>
+<p><img src="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtoOUV3NUFtYWliZTluUk5zTEE_ZT10WlNuN1M.png" srcset="/img/loading2.gif" lazyload alt="docker run -d"></p>
+<p>如果不加<code>-d</code>命令，容器就会处于foreground模式，有如下选项：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-string">-a=[]</span>           <span class="hljs-string">:</span> <span class="hljs-string">Attach</span> <span class="hljs-string">to</span> <span class="hljs-string">`STDIN`,</span> <span class="hljs-string">`STDOUT`</span> <span class="hljs-string">and/or</span> <span class="hljs-string">`STDERR`</span><br><span class="hljs-string">-t</span>              <span class="hljs-string">:</span> <span class="hljs-string">Allocate</span> <span class="hljs-string">a</span> <span class="hljs-string">pseudo-tty</span><br><span class="hljs-string">--sig-proxy=true:</span> <span class="hljs-string">Proxy</span> <span class="hljs-string">all</span> <span class="hljs-string">received</span> <span class="hljs-string">signals</span> <span class="hljs-string">to</span> <span class="hljs-string">the</span> <span class="hljs-string">process</span> <span class="hljs-string">(non-TTY</span> <span class="hljs-string">mode</span> <span class="hljs-string">only)</span><br><span class="hljs-string">-i</span>              <span class="hljs-string">:</span> <span class="hljs-string">Keep</span> <span class="hljs-string">STDIN</span> <span class="hljs-string">open</span> <span class="hljs-string">even</span> <span class="hljs-string">if</span> <span class="hljs-string">not</span> <span class="hljs-string">attached</span><br></code></pre></td></tr></table></figure>
+
+<p>通常会使用<code>-it</code>表示开启一个可交互的tty。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs bash">(base) [coldison@localhost ~]$ docker run -it  <span class="hljs-built_in">test</span> /bin/bash<br>[root@2bc4bad23cac /]<span class="hljs-comment"># ls</span><br>anaconda-post.log  bin  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var<br>[root@2bc4bad23cac ~]<span class="hljs-comment"># exit</span><br><span class="hljs-built_in">exit</span><br>(base) [coldison@localhost ~]$<br></code></pre></td></tr></table></figure>
+
+<p>输入<code>exit</code>或者键盘命令<code>Ctrl+D</code>就可以退出tty。可以使用<code>docker attach</code>命令进入正在执行某个命令的终端，不能在其中操作；多个窗口同时attach到同一个容器时，所有窗口同步显示；当某个窗口因命令阻塞，其他窗口也无法操作。简而言之，attach命令实际上是绑定到<code>ENTRYPOINT/CMD</code>进程的输入输出流上，因此通常难以交互。</p>
+<p>我们可以使用<code>docker exec</code>命令进行替代，参见官方文档<a target="_blank" rel="noopener" href="https://docs.docker.com/engine/reference/commandline/exec/">docker exec</a>。</p>
+<p><code>docker exec</code>命令的格式为：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker <span class="hljs-built_in">exec</span> [OPTIONS] CONTAINER COMMAND [ARG...]<br></code></pre></td></tr></table></figure>
+
+<p>实际上也就是<code>docker run</code>命令省去创建CONTAINER的过程。OPTIONS如下：</p>
+<table>
+<thead>
+<tr>
+<th align="left">Name, shorthand</th>
+<th align="left">Default</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">–detach , -d</td>
+<td align="left"></td>
+<td align="left">Detached mode: run command in the background</td>
+</tr>
+<tr>
+<td align="left">–detach-keys</td>
+<td align="left"></td>
+<td align="left">Override the key sequence for detaching a container</td>
+</tr>
+<tr>
+<td align="left">–env , -e</td>
+<td align="left"></td>
+<td align="left">Set environment variables</td>
+</tr>
+<tr>
+<td align="left">–env-file</td>
+<td align="left"></td>
+<td align="left">Read in a file of environment variables</td>
+</tr>
+<tr>
+<td align="left">–interactive , -i</td>
+<td align="left"></td>
+<td align="left">Keep STDIN open even if not attached</td>
+</tr>
+<tr>
+<td align="left">–privileged</td>
+<td align="left"></td>
+<td align="left">Give extended privileges to the command</td>
+</tr>
+<tr>
+<td align="left">–tty , -t</td>
+<td align="left"></td>
+<td align="left">Allocate a pseudo-TTY</td>
+</tr>
+<tr>
+<td align="left">–user , -u</td>
+<td align="left"></td>
+<td align="left">Username or UID (format: &lt;name</td>
+</tr>
+<tr>
+<td align="left">–workdir , -w</td>
+<td align="left"></td>
+<td align="left">Working directory inside the container</td>
+</tr>
+</tbody></table>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs bash">(base) [coldison@localhost ~]$ docker <span class="hljs-built_in">exec</span> -it 158e7b0112e1 /bin/bash<br>[root@158e7b0112e1 /]<span class="hljs-comment"># ls</span><br>anaconda-post.log  dev  home  lib64  mnt  proc  run   srv  tmp  var<br>bin                etc  lib   media  opt  root  sbin  sys  usr<br>[root@158e7b0112e1 /]<span class="hljs-comment"># (base) [coldison@localhost ~]$</span><br>(base) [coldison@localhost ~]$ docker <span class="hljs-built_in">exec</span> -it 158e7b0112e1 /bin/bash<br>[root@158e7b0112e1 /]<span class="hljs-comment"># exit</span><br></code></pre></td></tr></table></figure>
+
+<p><code>158e7b0112e1</code>是<code>CONTAINER ID</code>。需要注意的是，一定要加上执行的命令，并且这条命令的进程是容器的主进程之外的一条进程。此时加上<code>-d</code>参数就可以完成一些即时的命令。</p>
+<h3 id="docker-run-reference其余基本设置"><a href="#docker-run-reference其余基本设置" class="headerlink" title="docker run reference其余基本设置"></a>docker run reference其余基本设置</h3><p>在官方文档的<a target="_blank" rel="noopener" href="https://docs.docker.com/engine/reference/run/">docker run reference</a>中，与detached&amp;foreground平级的还有其他一些基本的概念与设置。总的来说，<code>docker run</code>试图使用一条命令从一个已经配置完成的镜像运行容器并且完成所有的设定。</p>
+<p>这部分内容与我们要做的事情暂时没有很大的关联，但是过一遍对于我们理解和使用docker非常有帮助，让我们知道docker的作用域，哪些可以设置。</p>
+<h4 id="Container-Identification"><a href="#Container-Identification" class="headerlink" title="Container Identification"></a>Container Identification</h4><p>操作者可以用如下三种方式识别容器：</p>
+<table>
+<thead>
+<tr>
+<th align="left">Identifier</th>
+<th align="left">type</th>
+<th align="left">Example value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">UUID long identifier</td>
+<td align="left"></td>
+<td align="left">“f78375b1c487e03c9438c729345e54db9d20cfa2ac1fc3494b6eb60872e74778”</td>
+</tr>
+<tr>
+<td align="left">UUID short identifier</td>
+<td align="left"></td>
+<td align="left">“f78375b1c487”</td>
+</tr>
+<tr>
+<td align="left">Name</td>
+<td align="left"></td>
+<td align="left">“evil_ptolemy”</td>
+</tr>
+</tbody></table>
+<p>其中如果没有使用<code>--name</code>来给容器命名，那么docker守护进程会自动给容器分配一个名字。</p>
+<p>也可以将容器的ID输出到文件中：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-string">--cidfile=&quot;&quot;:</span> <span class="hljs-string">Write</span> <span class="hljs-string">the</span> <span class="hljs-string">container</span> <span class="hljs-string">ID</span> <span class="hljs-string">to</span> <span class="hljs-string">the</span> <span class="hljs-string">file</span><br></code></pre></td></tr></table></figure>
+
+<h4 id="Image-Identification"><a href="#Image-Identification" class="headerlink" title="Image Identification"></a>Image Identification</h4><p>image的引用遵循<code>image[:tag]</code>的形式，如<code>docker run ubuntu:14.04</code>。</p>
+<p>采用v2或者更新的镜像格式的镜像还有一个内容可识别标识符（digest），也就是基于镜像的内容生成加密哈希串。为了避免从公共仓库pull下来的有被人篡改，可以在pull镜像的时候使用<code>image[@digest]</code>格式，如</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker run alpine@sha256:9cacb71397b640eca97488cf08582ae4e4068513101088e9f96c9814bfda95e0 <span class="hljs-built_in">date</span><br></code></pre></td></tr></table></figure>
+
+<p>当在pull镜像的时候，会根据镜像的内容计算digest，如果跟我们写入的不相符，就意味着包被人篡改了。</p>
+<h4 id="PID-settings-–pid"><a href="#PID-settings-–pid" class="headerlink" title="PID settings (–pid)"></a>PID settings (–pid)</h4><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-string">--pid=&quot;&quot;</span>  <span class="hljs-string">:</span> <span class="hljs-string">Set</span> <span class="hljs-string">the</span> <span class="hljs-string">PID</span> <span class="hljs-string">(Process)</span> <span class="hljs-string">Namespace</span> <span class="hljs-string">mode</span> <span class="hljs-string">for</span> <span class="hljs-string">the</span> <span class="hljs-string">container,</span><br>             <span class="hljs-string">&#x27;container:&lt;name|id&gt;&#x27;</span><span class="hljs-string">:</span> <span class="hljs-string">joins</span> <span class="hljs-string">another</span> <span class="hljs-string">container&#x27;s</span> <span class="hljs-string">PID</span> <span class="hljs-string">namespace</span><br>             <span class="hljs-attr">&#x27;host&#x27;:</span> <span class="hljs-string">use</span> <span class="hljs-string">the</span> <span class="hljs-string">host&#x27;s</span> <span class="hljs-string">PID</span> <span class="hljs-string">namespace</span> <span class="hljs-string">inside</span> <span class="hljs-string">the</span> <span class="hljs-string">container</span><br></code></pre></td></tr></table></figure>
+
+<p>容器的进程默认开启自己的命名空间，但是也可以使用<code>--pid</code>加入host或者其余容器的命名空间。如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker run -it --<span class="hljs-built_in">rm</span> --pid=host myhtop<br></code></pre></td></tr></table></figure>
+
+<p>加入其它容器的进程空间可以用来为容器debug。如下图，redis这部分我暂时还不太清楚，因此看看就好：<br><img src="https://link.jscdn.cn/1drv/aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBa3A3T0FGTWxmRUtoOUY1eXQzakRWdlFvRXpDWmc_ZT1McHY0WUY.png" srcset="/img/loading2.gif" lazyload alt="redis container debug"></p>
+<h4 id="UTS-settings-–uts"><a href="#UTS-settings-–uts" class="headerlink" title="UTS settings (–uts)"></a>UTS settings (–uts)</h4><p>UTS命名空间用来设置命名空间中可见的运行进程hostname和domain，默认每个容器，包括<code>--network=host</code>也有自己的UTS命名空间，当<code>--uts=host</code>时容器使用与host一样的UTS命名空间，而此时<code>--hostname</code>和<code>--domainname</code>设置不再有效。</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-string">--uts=&quot;&quot;</span>  <span class="hljs-string">:</span> <span class="hljs-string">Set</span> <span class="hljs-string">the</span> <span class="hljs-string">UTS</span> <span class="hljs-string">namespace</span> <span class="hljs-string">mode</span> <span class="hljs-string">for</span> <span class="hljs-string">the</span> <span class="hljs-string">container,</span><br>       <span class="hljs-attr">&#x27;host&#x27;:</span> <span class="hljs-string">use</span> <span class="hljs-string">the</span> <span class="hljs-string">host&#x27;s</span> <span class="hljs-string">UTS</span> <span class="hljs-string">namespace</span> <span class="hljs-string">inside</span> <span class="hljs-string">the</span> <span class="hljs-string">container</span><br></code></pre></td></tr></table></figure>
+
+<h4 id="IPC-settings-–ipc"><a href="#IPC-settings-–ipc" class="headerlink" title="IPC settings (–ipc)"></a>IPC settings (–ipc)</h4><p>IPC(POSIX&#x2F;SysV IPC)命名空间提供了命名的共享内存片段、信号和消息队列<a target="_blank" rel="noopener" href="https://docs.docker.com/engine/reference/run/#IPC%20settings:~:text=shared%20memory%20segments%2C%20semaphores%20and%20message%20queues">(shared memory segments, semaphores, and message queues)</a>。共享内存片段用于以内存级别的速度进程间的通信而非通过网络堆栈，经常被用在数据库或者定制的科学计算和金融服务业的高性能应用。如果这些应用被分解成多个容器，那么就需要共享容器的IPC机制。</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-string">--ipc=&quot;MODE&quot;</span>  <span class="hljs-string">:</span> <span class="hljs-string">Set</span> <span class="hljs-string">the</span> <span class="hljs-string">IPC</span> <span class="hljs-string">mode</span> <span class="hljs-string">for</span> <span class="hljs-string">the</span> <span class="hljs-string">container</span><br></code></pre></td></tr></table></figure>
+
+<p>值的设置如下：</p>
+<table>
+<thead>
+<tr>
+<th align="left">Value</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">“”</td>
+<td align="left">Use daemon’s default.</td>
+</tr>
+<tr>
+<td align="left">“none”</td>
+<td align="left">Own private IPC namespace, with &#x2F;dev&#x2F;shm not mounted.</td>
+</tr>
+<tr>
+<td align="left">“private”</td>
+<td align="left">Own private IPC namespace.</td>
+</tr>
+<tr>
+<td align="left">“shareable”</td>
+<td align="left">Own private IPC namespace, with a possibility to share it with other containers.</td>
+</tr>
+<tr>
+<td align="left">“container: &lt;<code>_name-or-ID_</code>&gt;”</td>
+<td align="left">Join another (“shareable”) container’s IPC namespace.</td>
+</tr>
+<tr>
+<td align="left">“host”</td>
+<td align="left">Use the host system’s IPC namespace.</td>
+</tr>
+</tbody></table>
+<p>设置<code>--ipc=shareable</code>后容器的IPC命名空间可被共享。</p>
+<h4 id="Network-settings"><a href="#Network-settings" class="headerlink" title="Network settings"></a><a target="_blank" rel="noopener" href="https://docs.docker.com/engine/reference/run/#network-settings:~:text=for%20other%20containers.-,Network%20settings%F0%9F%94%97,-%2D%2Ddns%3D%5B%5D%20%20%20%20%20%20%20%20%20%20%20%3A%20Set%20custom">Network settings</a></h4><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-string">--dns=[]</span>           <span class="hljs-string">:</span> <span class="hljs-string">Set</span> <span class="hljs-string">custom</span> <span class="hljs-string">dns</span> <span class="hljs-string">servers</span> <span class="hljs-string">for</span> <span class="hljs-string">the</span> <span class="hljs-string">container</span><br><span class="hljs-string">--network=&quot;bridge&quot;</span> <span class="hljs-string">:</span> <span class="hljs-string">Connect</span> <span class="hljs-string">a</span> <span class="hljs-string">container</span> <span class="hljs-string">to</span> <span class="hljs-string">a</span> <span class="hljs-string">network</span><br>                      <span class="hljs-attr">&#x27;bridge&#x27;:</span> <span class="hljs-string">create</span> <span class="hljs-string">a</span> <span class="hljs-string">network</span> <span class="hljs-string">stack</span> <span class="hljs-string">on</span> <span class="hljs-string">the</span> <span class="hljs-string">default</span> <span class="hljs-string">Docker</span> <span class="hljs-string">bridge</span><br>                      <span class="hljs-attr">&#x27;none&#x27;:</span> <span class="hljs-literal">no</span> <span class="hljs-string">networking</span><br>                      <span class="hljs-string">&#x27;container:&lt;name|id&gt;&#x27;</span><span class="hljs-string">:</span> <span class="hljs-string">reuse</span> <span class="hljs-string">another</span> <span class="hljs-string">container&#x27;s</span> <span class="hljs-string">network</span> <span class="hljs-string">stack</span><br>                      <span class="hljs-attr">&#x27;host&#x27;:</span> <span class="hljs-string">use</span> <span class="hljs-string">the</span> <span class="hljs-string">Docker</span> <span class="hljs-string">host</span> <span class="hljs-string">network</span> <span class="hljs-string">stack</span><br>                      <span class="hljs-string">&#x27;&lt;network-name&gt;|&lt;network-id&gt;&#x27;</span><span class="hljs-string">:</span> <span class="hljs-string">connect</span> <span class="hljs-string">to</span> <span class="hljs-string">a</span> <span class="hljs-string">user-defined</span> <span class="hljs-string">network</span><br><span class="hljs-string">--network-alias=[]</span> <span class="hljs-string">:</span> <span class="hljs-string">Add</span> <span class="hljs-string">network-scoped</span> <span class="hljs-string">alias</span> <span class="hljs-string">for</span> <span class="hljs-string">the</span> <span class="hljs-string">container</span><br><span class="hljs-string">--add-host=&quot;&quot;</span>      <span class="hljs-string">:</span> <span class="hljs-string">Add</span> <span class="hljs-string">a</span> <span class="hljs-string">line</span> <span class="hljs-string">to</span> <span class="hljs-string">/etc/hosts</span> <span class="hljs-string">(host:IP)</span><br><span class="hljs-string">--mac-address=&quot;&quot;</span>   <span class="hljs-string">:</span> <span class="hljs-string">Sets</span> <span class="hljs-string">the</span> <span class="hljs-string">container&#x27;s</span> <span class="hljs-string">Ethernet</span> <span class="hljs-string">device&#x27;s</span> <span class="hljs-string">MAC</span> <span class="hljs-string">address</span><br><span class="hljs-string">--ip=&quot;&quot;</span>            <span class="hljs-string">:</span> <span class="hljs-string">Sets</span> <span class="hljs-string">the</span> <span class="hljs-string">container&#x27;s</span> <span class="hljs-string">Ethernet</span> <span class="hljs-string">device&#x27;s</span> <span class="hljs-string">IPv4</span> <span class="hljs-string">address</span><br><span class="hljs-string">--ip6=&quot;&quot;</span>           <span class="hljs-string">:</span> <span class="hljs-string">Sets</span> <span class="hljs-string">the</span> <span class="hljs-string">container&#x27;s</span> <span class="hljs-string">Ethernet</span> <span class="hljs-string">device&#x27;s</span> <span class="hljs-string">IPv6</span> <span class="hljs-string">address</span><br><span class="hljs-string">--link-local-ip=[]</span> <span class="hljs-string">:</span> <span class="hljs-string">Sets</span> <span class="hljs-string">one</span> <span class="hljs-string">or</span> <span class="hljs-string">more</span> <span class="hljs-string">container&#x27;s</span> <span class="hljs-string">Ethernet</span> <span class="hljs-string">device&#x27;s</span> <span class="hljs-string">link</span> <span class="hljs-string">local</span> <span class="hljs-string">IPv4/IPv6</span> <span class="hljs-string">addresses</span><br></code></pre></td></tr></table></figure>
+
+<p>容器的network默认开启并且可以进行任何outgoing的连接，可以使用<code>docker run --network none</code>关闭outgoing和incoming的网络连接，这样的话容器只能通过文件或者<code>STDIN</code>和<code>STDOUT</code>进行IO。<strong>开放端口和连接其他的容器</strong>只能在bridge模式下进行，也就是连接到docker本身的网络驱动，一般也更偏向这种方式。<code>--dns</code>命令也可以改写DNS。默认情况下MAC地址是根据分配给容器的IP生成，也可以通过<code>--mac-address</code>来改写，docker不会确认MAC地址是否是<strong>唯一</strong>的。</p>
+<p>具体设置：</p>
+<table>
+<thead>
+<tr>
+<th align="left">Network</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">none</td>
+<td align="left">No networking in the container.</td>
+</tr>
+<tr>
+<td align="left">bridge(default)</td>
+<td align="left">Connect the container to the bridge via veth interfaces.</td>
+</tr>
+<tr>
+<td align="left">host</td>
+<td align="left">Use the host’s network stack inside the container.</td>
+</tr>
+<tr>
+<td align="left">container:&lt;name</td>
+<td align="left">id&gt;</td>
+</tr>
+<tr>
+<td align="left">NETWORK</td>
+<td align="left">Connects the container to a user created network (using docker network create command)</td>
+</tr>
+</tbody></table>
+<p>不同的模式还有一些细节，这里不再赘述。</p>
+<h4 id="Restart-policies-–restart"><a href="#Restart-policies-–restart" class="headerlink" title="Restart policies (–restart)"></a>Restart policies (–restart)</h4><p><code>--restart</code>命令用于指定容器在exit之后的重启策略，具体策略如下：</p>
+<table>
+<thead>
+<tr>
+<th align="left">Policy</th>
+<th align="left">Result</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">no</td>
+<td align="left">Do not automatically restart the container when it exits. This is the default.</td>
+</tr>
+<tr>
+<td align="left">on-failure[:max-retries]</td>
+<td align="left">Restart only if the container exits with a non-zero exit status. Optionally, limit the number of restart retries the Docker daemon attempts.</td>
+</tr>
+<tr>
+<td align="left">always</td>
+<td align="left">Always restart the container regardless of the exit status. When you specify always, the Docker daemon will try to restart the container indefinitely. The container will also always start on daemon startup, regardless of the current state of the container.</td>
+</tr>
+<tr>
+<td align="left">unless-stopped</td>
+<td align="left">Always restart the container regardless of the exit status, including on daemon startup, except if the container was put into a stopped state before the Docker daemon was stopped.</td>
+</tr>
+</tbody></table>
+<p>在重启时，为了防止服务器过载，daemon会采取延时启动的方式，从100ms开始，不断double知道达到<code>on-failure</code>限制或者最大延时1min，或者<code>docker stop</code>或者<code>docker rm -f</code>。</p>
+<p>如果一个容器成功重启（也就是started并且成功运行至少10s），上述的时延会被重置为100ms。在<code>on-faliure</code>的模式下可以设置最大重启次数，默认是无限次。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker run --restart=on-failure:10 redis<br></code></pre></td></tr></table></figure>
+
+<p>可以使用<code>docker inspect</code>来确认一个容器重启了多少次：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker inspect -f <span class="hljs-string">&quot;&#123;&#123;.RestartCount&#125;&#125;&quot;</span> my-container<br></code></pre></td></tr></table></figure>
+
+<p>或者上一次启动时间：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker inspect -f <span class="hljs-string">&quot;&#123;&#123;.State.StartedAt&#125;&#125;&quot;</span> my-container<br></code></pre></td></tr></table></figure>
+
+<h4 id="Exit-Status"><a href="#Exit-Status" class="headerlink" title="Exit Status"></a>Exit Status</h4><p>当<code>docker run</code>无法运行或者退出的时候，会返回一个错误码：</p>
+<table>
+<thead>
+<tr>
+<th align="left">错误码</th>
+<th align="left">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">125</td>
+<td align="left">docker守护进程错误，指docker run命令本身有问题</td>
+</tr>
+<tr>
+<td align="left">126</td>
+<td align="left">容器的命令无法唤起</td>
+</tr>
+<tr>
+<td align="left">127</td>
+<td align="left">容器的命令无法被找到</td>
+</tr>
+<tr>
+<td align="left">other</td>
+<td align="left">其余的命令错误码可以指定，如<code>docker run busybox /bin/sh -c &quot;exit 3</code></td>
+</tr>
+</tbody></table>
+<h4 id="Clean-up-–rm"><a href="#Clean-up-–rm" class="headerlink" title="Clean up (–rm)"></a>Clean up (–rm)</h4><p>默认情形下，容器退出之后，其文件系统仍旧保留，这方便我们debug，但是如果是运行短时的foreground进程，那么文件就会非常容易堆积。<code>--rm</code>标识会使docker自动清理容器并且在容器退出时移除文件系统。<code>--rm</code>会移除和容器相关的<strong>匿名空间</strong>，与<code>docker rm -v my-container</code>命令类似 。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker run --<span class="hljs-built_in">rm</span> -v /foo -v awesome:/bar busybox top<br></code></pre></td></tr></table></figure>
+
+<p>上述的命令中，<code>/foo</code>文件夹会被移除但是<code>/bar</code>会被保留。</p>
+<h4 id="Security-configuration"><a href="#Security-configuration" class="headerlink" title="Security configuration"></a>Security configuration</h4><table>
+<thead>
+<tr>
+<th align="left">Option</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">–security-opt&#x3D;”label&#x3D;user:USER”</td>
+<td align="left">Set the label user for the container</td>
+</tr>
+<tr>
+<td align="left">–security-opt&#x3D;”label&#x3D;role:ROLE”</td>
+<td align="left">Set the label role for the container</td>
+</tr>
+<tr>
+<td align="left">–security-opt&#x3D;”label&#x3D;type:TYPE”</td>
+<td align="left">Set the label type for the container</td>
+</tr>
+<tr>
+<td align="left">–security-opt&#x3D;”label&#x3D;level:LEVEL”</td>
+<td align="left">Set the label level for the container</td>
+</tr>
+<tr>
+<td align="left">–security-opt&#x3D;”label&#x3D;disable”</td>
+<td align="left">Turn off label confinement for the container</td>
+</tr>
+<tr>
+<td align="left">–security-opt&#x3D;”apparmor&#x3D;PROFILE”</td>
+<td align="left">Set the apparmor profile to be applied to the container</td>
+</tr>
+<tr>
+<td align="left">–security-opt&#x3D;”no-new-privileges:true”</td>
+<td align="left">Disable container processes from gaining new privileges</td>
+</tr>
+<tr>
+<td align="left">–security-opt&#x3D;”seccomp&#x3D;unconfined”</td>
+<td align="left">Turn off seccomp confinement for the container</td>
+</tr>
+<tr>
+<td align="left">–security-opt&#x3D;”seccomp&#x3D;profile.json”</td>
+<td align="left">White-listed syscalls seccomp Json file to be used as a seccomp filter</td>
+</tr>
+</tbody></table>
+<p>这里的安全策略，也就是容器允许使用的权限，需要自行定义。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker run --security-opt label=<span class="hljs-built_in">disable</span> -it fedora bash<br></code></pre></td></tr></table></figure>
+
+<p>容器disbale安全选项。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker run --security-opt  no-new-priviledges -it centos bash<br></code></pre></td></tr></table></figure>
+
+<p>阻止容器获得更多权限，这种情形下<code>su</code>或者<code>sudo</code>不再有用。</p>
+<h4 id="Specify-an-init-process"><a href="#Specify-an-init-process" class="headerlink" title="Specify an init process"></a>Specify an init process</h4><p><code>--init</code>可以指定容器中运行的PID为1的进程，默认是<code>docker-init</code>。</p>
+<h4 id="Specify-custom-cgroups-x2F-自定义cgroups"><a href="#Specify-custom-cgroups-x2F-自定义cgroups" class="headerlink" title="Specify custom cgroups&#x2F;自定义cgroups"></a>Specify custom cgroups&#x2F;自定义cgroups</h4><p><code>--cgroup-parent</code>参数可以给容器指定一个特定的cgroup，然后可以自定义cgroup可以使用的资源。</p>
+<h4 id="资源约束"><a href="#资源约束" class="headerlink" title="资源约束"></a>资源约束</h4><ol>
+<li><p><a target="_blank" rel="noopener" href="https://docs.docker.com/engine/reference/run/#network-settings:~:text=common%20parent%20group.-,Runtime%20constraints%20on%20resources,-%F0%9F%94%97">运行时资源约束&#x2F;Runtime constraints on resources</a>，如内存、CPU等等，用于调整容器的表现，由于设置比较多，给一个链接在这里。</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://docs.docker.com/engine/reference/run/#network-settings:~:text=Runtime%20constraints%20on%20resources%F0%9F%94%97">用户内存约束</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://docs.docker.com/engine/reference/run/%E3%80%82#network-settings:~:text=Kernel%20memory%20constraints%F0%9F%94%97">核内存约束&#x2F;Kernel memory constraints</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://docs.docker.com/engine/reference/run/#network-settings:~:text=CPU%20period%20constraint">CPU共享约束&#x2F;CPU share constraints</a>，默认状态下，所有的容器有相同比例的CPU时间片，但是我们可以通过设置比例来调整每个容器所使用的的CPU时间。</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://docs.docker.com/engine/reference/run/#network-settings:~:text=100%25%20of%20CPU2-,CPU%20period%20constraint,-%F0%9F%94%97">CPU周期与比例约束&#x2F;CPU period&amp;quota constraint</a>，约束容器使用的CPU周期的比例。</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://docs.docker.com/engine/reference/run/#network-settings:~:text=bandwidth%20limiting.-,Cpuset%20constraint,-%F0%9F%94%97">CPU核约束&#x2F;Cpuset constraint</a>，选择容器使用的CPU核，同样也能够约束容器使用的内存。</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://docs.docker.com/engine/reference/run/#network-settings:~:text=bandwidth%20limiting.-,Block%20IO%20bandwidth%20(Blkio)%20constraint,-%F0%9F%94%97">阻塞IO带宽约束&#x2F;Block IO bandwidth(Blkio) constraint</a>，设置容器的阻塞通信时间权重，可以具体到某一个设备，包括设备的读写和IO。</p>
+</li>
+</ol>
+<h4 id="用户组"><a href="#用户组" class="headerlink" title="用户组"></a>用户组</h4><p>docker容器进程默认在特定的用户的补充用户组中运行，可以使用如下命令增加用户组。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker run --<span class="hljs-built_in">rm</span> --group-add audio --group-add nogroup --group-add 777 busybox <span class="hljs-built_in">id</span><br></code></pre></td></tr></table></figure>
+
+<h4 id="运行时权限和Linux能力-x2F-Runtime-privilege-and-Linux-capabilities"><a href="#运行时权限和Linux能力-x2F-Runtime-privilege-and-Linux-capabilities" class="headerlink" title="运行时权限和Linux能力&#x2F;Runtime privilege and Linux capabilities"></a>运行时权限和Linux能力&#x2F;<a target="_blank" rel="noopener" href="https://docs.docker.com/engine/reference/run/#network-settings:~:text=99(nogroup)%2C777-,Runtime%20privilege%20and%20Linux%20capabilities,-%F0%9F%94%97">Runtime privilege and Linux capabilities</a></h4><table>
+<thead>
+<tr>
+<th align="left">Option</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">–cap-add</td>
+<td align="left">Add Linux capabilities</td>
+</tr>
+<tr>
+<td align="left">–cap-drop</td>
+<td align="left">Drop Linux capabilities</td>
+</tr>
+<tr>
+<td align="left">–privileged</td>
+<td align="left">Give extended privileges to this container</td>
+</tr>
+<tr>
+<td align="left">–device&#x3D;[]</td>
+<td align="left">Allows you to run devices inside the container without the –privileged flag.</td>
+</tr>
+</tbody></table>
+<p>在默认情况下，Docker容器是没有特权的，因此不被允许去接入任何的设备，而<code>--privileged</code>则允许容器接入所有设备，<code>--device</code>则是指定接入特定设备，可以<code>read</code>，<code>write</code>，<code>mknod</code>。还可以通过<code>--cap-add</code>和<code>--cap-drop</code>增加更多linux系统级的能力，这里就不单独列出。</p>
+<h4 id="日志驱动-x2F-Logging-drivers-–log-driver"><a href="#日志驱动-x2F-Logging-drivers-–log-driver" class="headerlink" title="日志驱动&#x2F;Logging drivers (–log-driver)"></a>日志驱动&#x2F;Logging drivers (–log-driver)</h4><p>容器可以选择跟daemon不同的日志驱动。</p>
+<h4 id="覆盖Dockerfile镜像默认设置"><a href="#覆盖Dockerfile镜像默认设置" class="headerlink" title="覆盖Dockerfile镜像默认设置"></a>覆盖Dockerfile镜像默认设置</h4><p>当基于Dockerfile创建镜像时，开发者会有一系列的默认设置，除了<code>FROM</code>，<code>RUN</code>，<code>MAINTAINER</code>，<code>ADD</code>之外的命令都可以在<code>docker run</code>中覆盖。我们可以一条一条来看。</p>
+<ol>
+<li><p>CMD(默认命令或者选项)</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker run [OPTIONS] IMAGE[:TAG|@DIGEST] [COMMAND] [ARG...]<br></code></pre></td></tr></table></figure>
+
+<p> 创建IMAGE的开发者会用Dockerfile中的CMD命令提供默认的COMMAND指令。</p>
+</li>
+<li><p>ENTRYPOINT(运行时默认执行命令)<br> ENTRYPOINT是容器运行时必须执行的命令，有了ENTRYPOINT之后CMD命令的作用是为ENTRYPOINT传入更多的参数。可以使用<code>--entrypoint</code>参数改写镜像的ENTRYPOINT，如：</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker run -it --entrypoint /bin/bash example/redis<br></code></pre></td></tr></table></figure>
+
+<p> 使用COMMAND为ENTRYPOINT传入更多的参数：</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker run -it --entrypoint /bin/bash example/redis -c <span class="hljs-built_in">ls</span> -l<br>docker run -it --entrypoint /usr/bin/redis-cli example/redis --<span class="hljs-built_in">help</span><br></code></pre></td></tr></table></figure>
+
+<p> 或者传入一个空的ENTRYPOINT：</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker run -it --entrypoint=<span class="hljs-string">&quot;&quot;</span> mysql bash<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>EXPOSE(外部接入的端口)</p>
+ <figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-string">--expose=[]:</span> <span class="hljs-string">Expose</span> <span class="hljs-string">a</span> <span class="hljs-string">port</span> <span class="hljs-string">or</span> <span class="hljs-string">a</span> <span class="hljs-string">range</span> <span class="hljs-string">of</span> <span class="hljs-string">ports</span> <span class="hljs-string">inside</span> <span class="hljs-string">the</span> <span class="hljs-string">container.</span><br>            <span class="hljs-string">These</span> <span class="hljs-string">are</span> <span class="hljs-string">additional</span> <span class="hljs-string">to</span> <span class="hljs-string">those</span> <span class="hljs-string">exposed</span> <span class="hljs-string">by</span> <span class="hljs-string">the</span> <span class="hljs-string">`EXPOSE`</span> <span class="hljs-string">instruction</span><br><span class="hljs-string">-P</span>         <span class="hljs-string">:</span> <span class="hljs-string">Publish</span> <span class="hljs-string">all</span> <span class="hljs-string">exposed</span> <span class="hljs-string">ports</span> <span class="hljs-string">to</span> <span class="hljs-string">the</span> <span class="hljs-string">host</span> <span class="hljs-string">interfaces</span><br><span class="hljs-string">-p=[]</span>      <span class="hljs-string">:</span> <span class="hljs-string">Publish</span> <span class="hljs-string">a</span> <span class="hljs-string">container&#x27;s</span> <span class="hljs-string">port</span> <span class="hljs-string">or</span> <span class="hljs-string">a</span> <span class="hljs-string">range</span> <span class="hljs-string">of</span> <span class="hljs-string">ports</span> <span class="hljs-string">to</span> <span class="hljs-string">the</span> <span class="hljs-string">host</span><br>            <span class="hljs-attr">format:</span> <span class="hljs-string">ip:hostPort:containerPort</span> <span class="hljs-string">|</span> <span class="hljs-string">ip::containerPort</span> <span class="hljs-string">|</span> <span class="hljs-string">hostPort:containerPort</span> <span class="hljs-string">|</span> <span class="hljs-string">containerPort</span><br>            <span class="hljs-string">Both</span> <span class="hljs-string">hostPort</span> <span class="hljs-string">and</span> <span class="hljs-string">containerPort</span> <span class="hljs-string">can</span> <span class="hljs-string">be</span> <span class="hljs-string">specified</span> <span class="hljs-string">as</span> <span class="hljs-string">a</span><br>            <span class="hljs-string">range</span> <span class="hljs-string">of</span> <span class="hljs-string">ports.</span> <span class="hljs-string">When</span> <span class="hljs-string">specifying</span> <span class="hljs-string">ranges</span> <span class="hljs-string">for</span> <span class="hljs-string">both,</span> <span class="hljs-string">the</span><br>            <span class="hljs-string">number</span> <span class="hljs-string">of</span> <span class="hljs-string">container</span> <span class="hljs-string">ports</span> <span class="hljs-string">in</span> <span class="hljs-string">the</span> <span class="hljs-string">range</span> <span class="hljs-string">must</span> <span class="hljs-string">match</span> <span class="hljs-string">the</span><br>            <span class="hljs-string">number</span> <span class="hljs-string">of</span> <span class="hljs-string">host</span> <span class="hljs-string">ports</span> <span class="hljs-string">in</span> <span class="hljs-string">the</span> <span class="hljs-string">range,</span> <span class="hljs-attr">for example:</span><br>                <span class="hljs-string">-p</span> <span class="hljs-number">1234</span><span class="hljs-number">-1236</span><span class="hljs-string">:1234-1236/tcp</span><br><br>            <span class="hljs-string">When</span> <span class="hljs-string">specifying</span> <span class="hljs-string">a</span> <span class="hljs-string">range</span> <span class="hljs-string">for</span> <span class="hljs-string">hostPort</span> <span class="hljs-string">only,</span> <span class="hljs-string">the</span><br>            <span class="hljs-string">containerPort</span> <span class="hljs-string">must</span> <span class="hljs-string">not</span> <span class="hljs-string">be</span> <span class="hljs-string">a</span> <span class="hljs-string">range.</span>  <span class="hljs-string">In</span> <span class="hljs-string">this</span> <span class="hljs-string">case</span> <span class="hljs-string">the</span><br>            <span class="hljs-string">container</span> <span class="hljs-string">port</span> <span class="hljs-string">is</span> <span class="hljs-string">published</span> <span class="hljs-string">somewhere</span> <span class="hljs-string">within</span> <span class="hljs-string">the</span><br>            <span class="hljs-string">specified</span> <span class="hljs-string">hostPort</span> <span class="hljs-string">range.</span> <span class="hljs-string">(e.g.,</span> <span class="hljs-string">`-p</span> <span class="hljs-number">1234</span><span class="hljs-number">-1236</span><span class="hljs-string">:1234/tcp`)</span><br><br>            <span class="hljs-string">(use</span> <span class="hljs-string">&#x27;docker port&#x27;</span> <span class="hljs-string">to</span> <span class="hljs-string">see</span> <span class="hljs-string">the</span> <span class="hljs-string">actual</span> <span class="hljs-string">mapping)</span><br><br><span class="hljs-string">--link=&quot;&quot;</span>  <span class="hljs-string">:</span> <span class="hljs-string">Add</span> <span class="hljs-string">link</span> <span class="hljs-string">to</span> <span class="hljs-string">another</span> <span class="hljs-string">container</span> <span class="hljs-string">(&lt;name</span> <span class="hljs-string">or</span> <span class="hljs-string">id&gt;:alias</span> <span class="hljs-string">or</span> <span class="hljs-string">&lt;name</span> <span class="hljs-string">or</span> <span class="hljs-string">id&gt;)</span><br></code></pre></td></tr></table></figure>
+
+<p> 暴露的端口会绑定到host的随机端口，可以使用<code>docker port</code>查看，<code>link</code>命令用于连接其他的容器，从而使用其他容器暴露的端口。</p>
+</li>
+<li><p>ENV(环境变量)</p>
+<p> Docker不会设置windows容器的任何环境变量，以下是Linux容器的设置：</p>
+<table>
+<thead>
+<tr>
+<th align="left">Variable</th>
+<th align="left">Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">HOME</td>
+<td align="left">Set based on the value of USER</td>
+</tr>
+<tr>
+<td align="left">HOSTNAME</td>
+<td align="left">The hostname associated with the container</td>
+</tr>
+<tr>
+<td align="left">PATH</td>
+<td align="left">Includes popular directories, such as &#x2F;usr&#x2F;local&#x2F;sbin:&#x2F;usr&#x2F;local&#x2F;bin:&#x2F;usr&#x2F;sbin:&#x2F;usr&#x2F;bin:&#x2F;sbin:&#x2F;bin</td>
+</tr>
+<tr>
+<td align="left">TERM</td>
+<td align="left">xterm if the container is allocated a pseudo-TTY</td>
+</tr>
+</tbody></table>
+<p> <code>docker run</code>可以使用一个或者更多的<code>-e</code>来覆盖上述的环境变量。如果没有特别指定一个环境变量的值，那么环境变量将会到运行容器的环境中去寻找。</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">export</span> today=Wednesday<br>docker run -e <span class="hljs-string">&quot;deep=purple&quot;</span> -e today --<span class="hljs-built_in">rm</span> alpine <span class="hljs-built_in">env</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>HEALTHCHECK(健康检查)</p>
+</li>
+<li><p>TMPFS(挂载tmpfs文件系统)</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker run -d --tmpfs /run:rw,noexec,nosuid,size=65536k my_image<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>VOLUME(共享文件系统)</p>
+</li>
+<li><p>USER</p>
+</li>
+<li><p>WORKDIR</p>
+</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本文主要使用了简单的dockerfile构建了一个基本的容器，参考官方文档详细解释了<code>docker run</code>命令。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%95%99%E7%A8%8B/" class="category-chain-item">教程</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%95%99%E7%A8%8B/Docker%E4%BD%BF%E7%94%A8/" class="category-chain-item">Docker使用</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E5%AE%B9%E5%99%A8/">#容器</a>
+      
+        <a href="/tags/Docker/">#Docker</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Docker的使用示例(一)</div>
+      <div>https://coldison.github.io/2023/02/14/Docker的使用示例(一)/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Coldison</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年2月14日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2022年10月11日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2023/02/14/Docker%E7%9A%84%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B(%E4%BA%8C)/" title="Docker的使用示例(二)">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Docker的使用示例(二)</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/02/14/hello-world/" title="Hello World">
+                        <span class="hidden-mobile">Hello World</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'Coldison/Blog-Comments');
+      s.setAttribute('issue-term', 'url');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
