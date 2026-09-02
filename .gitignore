@@ -1,0 +1,17 @@
+.DS_Store
+Thumbs.db
+db.json
+*.log
+node_modules/
+public/
+.deploy*/
+.history/
+_multiconfig.yml
+
+# Local credentials and machine-specific environment files
+gittoken.txt
+.env
+.env.*
+
+# Unused legacy theme checkout (contains its own Git repository)
+themes/next/
